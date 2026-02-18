@@ -64,7 +64,7 @@ Additionally:
 
 Connected to `fitbit_database.db` using `sqlite3`.
 
-### ✔ User Classification
+### User Classification
 
 Used SQL:
 
