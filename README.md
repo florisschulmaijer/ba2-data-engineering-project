@@ -48,7 +48,9 @@ smf.ols("Calories ~ TotalSteps + C(Id)", data=df)
 ```
 
 Additionally:
-- Built a function to visualize scatterplot + regression line per user  
+- Built a function to visualize scatterplot + regression line per user
+- Built a function to visualize linegraph of total daily steps per user
+- Built  functions to visualize total daily active distance and active minutes per user in stacked bar graphs
 
 ---
 
