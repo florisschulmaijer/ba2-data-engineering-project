@@ -125,3 +125,5 @@ def plot_user_regression(user_id):
     print(model.summary())
 
 plot_user_regression(1503960366)
+print("hello")
+plot_user_regression(1503960367)
