@@ -125,5 +125,79 @@ def plot_user_regression(user_id):
     print(model.summary())
 
 plot_user_regression(1503960366)
-print("hello")
-plot_user_regression(1503960367)
+
+# === create function to plot daily distance per user ===
+# Plot line graph that shows calories burnt each day
+def plot_total_steps(user_id, start_date=None, end_date=None, df=df):
+
+    # Filter data for user ID
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Filter data for date range if provided
+    if start_date is not None and end_date is not None:
+        start_date = dt.datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = dt.datetime.strptime(end_date, "%Y-%m-%d")
+        user_data = user_data[(user_data["ActivityDate"] >= start_date) & (user_data["ActivityDate"] <= end_date)]
+
+    user_data = user_data.sort_values("ActivityDate")
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(user_data["ActivityDate"], user_data["TotalSteps"], marker="o")
+    plt.title(f"Calories Burnt per Day (User {user_id})")
+    plt.xlabel("Date")
+    plt.ylabel("Calories Burnt")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
+plot_total_steps(1503960366,  "2016-03-20", "2016-03-30", df=df)
+# Plot bar graph that shows active distance per day
+def plot_total_distance(user_id, start_date=None, end_date=None, df=df):
+
+    # Filter data for user ID
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Filter data for date range if provided
+    if start_date is not None and end_date is not None:
+        start_date = dt.datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = dt.datetime.strptime(end_date, "%Y-%m-%d")
+        user_data = user_data[(user_data["ActivityDate"] >= start_date) & (user_data["ActivityDate"] <= end_date)]
+
+    user_data = user_data.sort_values("ActivityDate")
+    user_data["ActivityDate"] = user_data["ActivityDate"].dt.strftime("%Y-%m-%d")
+    user_data = user_data[["ActivityDate",'VeryActiveDistance', "ModeratelyActiveDistance",'LightActiveDistance']]
+    user_data.plot(x='ActivityDate', kind='bar', stacked=True,
+            title= f'Total Distance for (User {user_id})')
+    plt.xlabel("Date")
+    plt.ylabel("Total Distance")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
+plot_total_distance(1503960366, "2016-03-20", "2016-03-30")
+
+def plot_active_minutes(user_id, start_date=None, end_date=None, df=df):
+
+    # Filter data for user ID
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Filter data for date range if provided
+    if start_date is not None and end_date is not None:
+        start_date = dt.datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = dt.datetime.strptime(end_date, "%Y-%m-%d")
+        user_data = user_data[(user_data["ActivityDate"] >= start_date) & (user_data["ActivityDate"] <= end_date)]
+
+    user_data = user_data.sort_values("ActivityDate")
+    user_data["ActivityDate"] = user_data["ActivityDate"].dt.strftime("%Y-%m-%d")
+    user_data = user_data[["ActivityDate",'LightlyActiveMinutes', 'FairlyActiveMinutes',"VeryActiveMinutes"]]
+    user_data.plot(x='ActivityDate', kind='bar', stacked=True,
+            title= f'Total Daily Active Minutes for (User {user_id})')
+    plt.xlabel("Date")
+    plt.ylabel("Active Minutes")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+plot_active_minutes(1503960366, "2016-03-20", "2016-03-30")
