@@ -4,6 +4,7 @@
 ## Project Overview
 This project analyses Fitbit activity data using Python and SQL.  
 The focus is on exploring relationships between physical activity, calories burned, and sleep behavior.
+
 ---
 # Part 1 – Exploratory Data Analysis
 We worked with `daily_activity.csv`.
