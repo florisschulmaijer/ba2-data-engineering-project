@@ -12,7 +12,6 @@ conn = sqlite3.connect("fitbit_database.db")
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
 
 # === create function to plot daily HR per user ===
-# Plot line graph that shows calories burnt each day
 def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_database.db"):
     #connect to database
     conn = sqlite3.connect(database)
