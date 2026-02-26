@@ -143,7 +143,7 @@ def plot_total_steps(user_id, start_date=None, end_date=None, df=df):
 
     plt.figure(figsize=(12, 6))
     plt.plot(user_data["ActivityDate"], user_data["TotalSteps"], marker="o")
-    plt.title(f"Calories Burnt per Day (User {user_id})")
+    plt.title(f"Total Steps per Day (User {user_id})")
     plt.xlabel("Date")
     plt.ylabel("Calories Burnt")
     plt.xticks(rotation=45)
