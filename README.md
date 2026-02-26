@@ -103,7 +103,12 @@ What you should see when running the script:
   - Average calories per 4-hour block.
   - Average minutes asleep per 4-hour block.
 ---
-
+# Part 4
+In this part we continued investigating the data and defined functions for visualizing individual and group level summaries
+### bullet 3: defining functions for visualizing individual and group level summaries
+- function plot daily HR: function that plots a linegraph of the heart rate for an individual, either per day or per date range. Note: when a daterange is given, the average heart rate is computed per hour
+- function plot daily steps: function that plots the daily steps for an individual, either per day or per date range. Note: when a daterange is given, the hourly steps are instead shown per 4 hours.
+- function plot weekday activity per class: function that plots boxplots of various activity measures (to be entered as a variable) for each separate user class per weekday
 # Technologies Used
 - Python (pandas, matplotlib, statsmodels)
 - SQLite (sqlite3)
