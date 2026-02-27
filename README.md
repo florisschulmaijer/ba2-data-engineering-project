@@ -101,6 +101,23 @@ What you should see when running the script:
   - Average steps per 4-hour block.
   - Average calories per 4-hour block.
   - Average minutes asleep per 4-hour block.
+
+### How heart rate relates to exercise intensity for a given user
+- Loaded data and hourly intensity data from databases
+- Cleaned, and aligned by User ID and Hour
+- Heart Rate is aggregated to hourly average and merged with total intensity
+
+- The function plot_user_HR_exercise_int(id) produces a dual-axis plot showing how a user's average heart rate varies alongside their exercise intensity over time
+- Key output: Hourly heart-rate vs. intensity visualization for any user ID
+
+### Weather and Activity Correlations
+- Daily activities metrics are merged with Chicago weather data 
+- Activity is aggregated by date and by activity class
+- Pearson correlations are computed between these two variab;es
+- Only statistically significant pairs are visualized
+- A class-wise LOWESS analysis indicates how different activity groups respond to weather conditions.
+
+- Key output: Correlation table, multi-panel regression plots
 ---
 
 # Technologies Used
