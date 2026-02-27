@@ -9,6 +9,97 @@ import numpy as np
 # Connect to database
 conn = sqlite3.connect("fitbit_database.db")
 
+# === Bullet 1: Looking for missing values in weight_log and replace them ===
+query = '''SELECT * FROM weight_log'''
+df = pd.read_sql_query(query, conn)
+df.loc[df["WeightKg"].isna(), "WeightKg"] = (
+    df.loc[df["WeightKg"].isna(), "WeightPounds"] * 0.45359237
+)
+df = df.drop('Fat', axis=1)
+
+# === Bullet 2: Merging tables, and look into relationships between variables===
+query = ''' select s1.Id, s1.ActivityHour, s1.Calories, s2.TotalIntensity, s2.AverageIntensity from hourly_calories s1 inner join hourly_intensity s2 on s1.Id = s2.Id and s1.ActivityHour = s2.ActivityHour'''
+calories_intensity_df = pd.read_sql_query(query, conn)
+calories_intensity_df["Id"] = calories_intensity_df["Id"].astype("Int64")
+calories_intensity_df["ActivityHour"] = pd.to_datetime(
+    calories_intensity_df["ActivityHour"],
+    format="%m/%d/%Y %I:%M:%S %p")
+calories_intensity_df["Date"] = calories_intensity_df["ActivityHour"].dt.date
+calories_intensity_df = calories_intensity_df.rename(columns={'TotalIntensity_x':'TotalIntensity', 'AverageIntensity_x':'AverageIntensity'})
+
+daily_df = calories_intensity_df.groupby("Date").agg({
+    "Calories": "mean",
+    "TotalIntensity": "mean",
+    "AverageIntensity": "mean"
+}).reset_index()
+
+def plot_daily_calories_intensity(df):
+    plt.figure(figsize=(12,6))
+
+    plt.plot(df["Date"], df["Calories"], label="Daily Calories", color="red", linewidth=2)
+    plt.plot(df["Date"], df["TotalIntensity"], label="Daily Total Intensity", color="blue", linewidth=2)
+
+    plt.xlabel("Date")
+    plt.ylabel("Value")
+    plt.title("Daily Calories and Intensity")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+# Relationship between calories and exercise intensity
+plot_daily_calories_intensity(daily_df)
+
+daily_df = calories_intensity_df.groupby("Date").agg({
+    "Calories": "mean",
+    "TotalIntensity": "mean",
+    "AverageIntensity": "mean"
+}).reset_index()
+
+def plot_daily_calories_intensity(df):
+    plt.figure(figsize=(12,6))
+
+    plt.plot(df["Date"], df["Calories"], label="Daily Calories", color="red", linewidth=2)
+    plt.plot(df["Date"], df["TotalIntensity"], label="Daily Total Intensity", color="blue", linewidth=2)
+
+    plt.xlabel("Date")
+    plt.ylabel("Value")
+    plt.title("Daily Calories and Intensity")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+plot_daily_calories_intensity(daily_df)
+
+# Scatter plot for minutes sleep and daily steps
+query = ''' select * from hourly_steps'''
+daily_steps = pd.read_sql_query(query, conn)
+daily_steps["Date"] = pd.to_datetime(daily_steps["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p").dt.date
+
+daily_steps = daily_steps.groupby(["Id", "Date"])["StepTotal"].sum().reset_index()
+query = ''' select * from minute_sleep'''
+daily_sleep = pd.read_sql_query(query, conn)
+daily_sleep = daily_sleep.copy()
+daily_sleep["Date"] = pd.to_datetime(daily_sleep["date"], format="%m/%d/%Y %I:%M:%S %p").dt.date
+
+daily_sleep = daily_sleep.groupby(["Id", "Date"])["value"].sum().reset_index()
+steps_sleep = daily_steps.merge(
+    daily_sleep,
+    on=["Id", "Date"],
+    how="inner"
+)
+plt.figure(figsize=(12,6))
+
+plt.scatter(steps_sleep["StepTotal"], steps_sleep["value"], alpha=0.6)
+
+plt.xlabel("Steps per Day")
+plt.ylabel("Minutes Asleep per Night")
+plt.title("Daily Steps vs. Sleep Duration")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
 
 # === create function to plot daily HR per user ===
@@ -103,8 +194,8 @@ def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_databas
         plt.tight_layout()
         plt.show()
 
-plot_daily_HR(2022484408,  start_date="2016-04-02")
-plot_daily_HR(2022484408,  "2016-04-01", "2016-04-02")
+#plot_daily_HR(2022484408,  start_date="2016-04-02")
+#plot_daily_HR(2022484408,  "2016-04-01", "2016-04-02")
 
 def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_database.db"):
     #connect to database
@@ -249,8 +340,8 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
         plt.show()
 
 
-plot_daily_steps(2022484408, start_date="2016-04-02")
-plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06")
+#plot_daily_steps(2022484408, start_date="2016-04-02")
+#plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06")
 
 #=== define function for plotting HR, sleep duration and sleep value per user
 def individual_sleep(date, userid, database = ):
@@ -302,11 +393,12 @@ def plot_weekday_activity_per_class(database = "fitbit_database.db",
     plt.show()
 
 #Generate some plots
-plot_weekday_activity_per_class(database = "fitbit_database.db",
-                                variable = "TotalSteps")
+#plot_weekday_activity_per_class(database = "fitbit_database.db",
+#                                variable = "TotalSteps")
 
-plot_weekday_activity_per_class(database = "fitbit_database.db",
-                                variable = "Calories")
-plot_weekday_activity_per_class(database = "fitbit_database.db",
-                                variable = "TotalDistance")
+#plot_weekday_activity_per_class(database = "fitbit_database.db",
+#                                variable = "Calories")
+#lot_weekday_activity_per_class(database = "fitbit_database.db",
+#                                variable = "TotalDistance")
+
 
