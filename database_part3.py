@@ -431,8 +431,8 @@ for ax, row in zip(axes, pairs.itertuples()):
 
     annotate_corr(ax, r, p)
 
-#plt.tight_layout()
-#plt.show()
+plt.tight_layout()
+plt.show()
 
 # Class-wise analysis for weather-activity correlations
 
