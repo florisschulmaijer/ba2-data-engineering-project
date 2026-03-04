@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates #used to convert time labels to relevant plot labels
 import seaborn as sns
 import numpy as np
+from scipy.stats import pearsonr
 
 # Connect to database
 conn = sqlite3.connect("fitbit_database.db")
@@ -17,7 +18,7 @@ df.loc[df["WeightKg"].isna(), "WeightKg"] = (
 )
 df = df.drop('Fat', axis=1)
 
-# === Bullet 2: Merging tables, and look into relationships between variables===
+# === Bullet 2: Merging tables, and look into relationships between variables ===
 query = ''' select s1.Id, s1.ActivityHour, s1.Calories, s2.TotalIntensity, s2.AverageIntensity from hourly_calories s1 inner join hourly_intensity s2 on s1.Id = s2.Id and s1.ActivityHour = s2.ActivityHour'''
 calories_intensity_df = pd.read_sql_query(query, conn)
 calories_intensity_df["Id"] = calories_intensity_df["Id"].astype("Int64")
@@ -50,28 +51,7 @@ def plot_daily_calories_intensity(df):
 # Relationship between calories and exercise intensity
 plot_daily_calories_intensity(daily_df)
 
-daily_df = calories_intensity_df.groupby("Date").agg({
-    "Calories": "mean",
-    "TotalIntensity": "mean",
-    "AverageIntensity": "mean"
-}).reset_index()
-
-def plot_daily_calories_intensity(df):
-    plt.figure(figsize=(12,6))
-
-    plt.plot(df["Date"], df["Calories"], label="Daily Calories", color="red", linewidth=2)
-    plt.plot(df["Date"], df["TotalIntensity"], label="Daily Total Intensity", color="blue", linewidth=2)
-
-    plt.xlabel("Date")
-    plt.ylabel("Value")
-    plt.title("Daily Calories and Intensity")
-    plt.legend()
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
-
-plot_daily_calories_intensity(daily_df)
-
+"""
 # Scatter plot for minutes sleep and daily steps
 query = ''' select * from hourly_steps'''
 daily_steps = pd.read_sql_query(query, conn)
@@ -99,12 +79,13 @@ plt.title("Daily Steps vs. Sleep Duration")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+"""
 
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
 
-# === create function to plot daily HR per user ===
+# === Create function to plot daily HR per user ===
 def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_database.db"):
-    #connect to database
+    # Connect to database
     conn = sqlite3.connect(database)
 
     query = "SELECT * FROM heart_rate"
@@ -117,9 +98,9 @@ def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_databas
     start_date_string = start_date
     end_date_string = end_date
     if end_date is None:
-        end_date = start_date #filter on only one date when only one day is given
+        end_date = start_date # Filter on only one date when only one day is given
 
-    #check if user id exists in frame
+    # Check if user id exists in frame
     if user_id not in df["Id"].values:
         print("ID not found")
         return
@@ -127,7 +108,7 @@ def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_databas
     # Filter for user
     user_data = df[df["Id"] == user_id].copy()
 
-    #If date filtering requested
+    # If date filtering requested
     if start_date and end_date:
 
         # Convert to datetime
@@ -344,7 +325,7 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
 #plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06")
 
 #=== define function for plotting HR, sleep duration and sleep value per user
-def individual_sleep(date, userid, database = ):
+# def individual_sleep(date, userid, database = ):
 
 
 
@@ -401,4 +382,115 @@ def plot_weekday_activity_per_class(database = "fitbit_database.db",
 #lot_weekday_activity_per_class(database = "fitbit_database.db",
 #                                variable = "TotalDistance")
 
+# === Bullet 4: General insights for dashboard (activity, weekends, weather) ===
+conn = sqlite3.connect("fitbit_database.db")
 
+query = '''
+SELECT Id, ActivityDate, TotalSteps, Calories, SedentaryMinutes,
+       VeryActiveMinutes, FairlyActiveMinutes, LightlyActiveMinutes
+FROM daily_activity
+'''
+activity = pd.read_sql_query(query, conn)
+
+activity["ActivityDate"] = pd.to_datetime(activity["ActivityDate"]).dt.normalize()
+activity["Id"] = activity["Id"].astype("int64")
+activity["TotalActiveMin"] = activity["VeryActiveMinutes"] + activity["FairlyActiveMinutes"] + activity["LightlyActiveMinutes"]
+
+# Daily sleep minutes (count value==1 as asleep)
+sleep = pd.read_sql_query("SELECT Id, date, value FROM minute_sleep", conn)
+sleep["date"] = pd.to_datetime(sleep["date"])
+sleep["day"] = sleep["date"].dt.normalize()
+sleep["Id"] = sleep["Id"].astype("int64")
+
+sleep["asleep_min"] = (sleep["value"] == 1).astype(int)
+sleep_daily = sleep.groupby(["Id", "day"])["asleep_min"].sum().reset_index()
+
+# Merge activity and sleep
+df_daily = activity.merge(sleep_daily, left_on=["Id", "ActivityDate"], right_on=["Id", "day"], how="inner")
+df_daily = df_daily.drop(columns=["day"])
+
+# Mark weekends
+df_daily["is_weekend"] = df_daily["ActivityDate"].dt.dayofweek >= 5  # Sat=5, Sun=6
+
+conn.close()
+
+print(df_daily[["Id","ActivityDate","TotalSteps","TotalActiveMin","SedentaryMinutes","asleep_min","is_weekend"]].head())
+
+# Daily activity vs sleep duration
+plt.figure(figsize=(8,5))
+plt.scatter(df_daily["TotalSteps"], df_daily["asleep_min"], alpha=0.4)
+plt.xlabel("Total steps per day")
+plt.ylabel("Minutes asleep per day")
+plt.title("Daily Steps vs Sleep Duration")
+plt.tight_layout()
+plt.show()
+
+r, p = pearsonr(df_daily["TotalSteps"], df_daily["asleep_min"])
+print(f"Correlation (Steps vs Sleep): r={r:.3f}, p={p:.4f}")
+
+r, p = pearsonr(df_daily["TotalActiveMin"], df_daily["asleep_min"])
+print(f"Correlation (ActiveMin vs Sleep): r={r:.3f}, p={p:.4f}")
+
+# Weekdays vs weekends
+weekdays = df_daily[df_daily["is_weekend"] == False]
+weekends  = df_daily[df_daily["is_weekend"] == True]
+
+r_wd, p_wd = pearsonr(weekdays["TotalSteps"], weekdays["asleep_min"])
+r_we, p_we = pearsonr(weekends["TotalSteps"], weekends["asleep_min"])
+
+print(f"Weekdays (Steps vs Sleep): r={r_wd:.3f}, p={p_wd:.4f}")
+print(f"Weekends (Steps vs Sleep): r={r_we:.3f}, p={p_we:.4f}")
+
+# simple visual comparison of sleep duration
+plt.figure(figsize=(6,4))
+sns.boxplot(x=df_daily["is_weekend"], y=df_daily["asleep_min"])
+plt.xticks([0,1], ["Weekday", "Weekend"])
+plt.xlabel("")
+plt.ylabel("Minutes asleep")
+plt.title("Sleep duration: Weekday vs Weekend")
+plt.tight_layout()
+plt.show()
+
+# Weather vs activity
+weather = pd.read_csv("data/ChicagoWeather.csv")
+weather["datetime"] = pd.to_datetime(weather["datetime"]).dt.normalize()
+weather = weather[["datetime", "temp", "precip", "windspeed", "feelslike"]]
+
+daily_steps = df_daily.groupby("ActivityDate")["TotalSteps"].mean().reset_index()
+
+# Merge daily steps with weather data by date
+daily_weather = daily_steps.merge(weather, left_on="ActivityDate", right_on="datetime", how="left")
+
+daily_weather = daily_weather.dropna(subset=["temp", "TotalSteps"]).copy()
+
+print("Correlation temp vs avg daily steps:", round(daily_weather["temp"].corr(daily_weather["TotalSteps"]), 3))
+
+# Bin temperature into 4 categories and plot average steps per bin
+daily_weather["temp_bin"] = pd.cut(daily_weather["temp"], bins=4)
+avg_by_bin = daily_weather.groupby("temp_bin")["TotalSteps"].mean()
+
+plt.figure(figsize=(8,4))
+plt.bar(avg_by_bin.index.astype(str), avg_by_bin.values)
+plt.xticks(rotation=30, ha="right")
+plt.title("Average Daily Steps by Temperature Range")
+plt.xlabel("Temperature Range (Celsius)")
+plt.ylabel("Average Daily Steps")
+plt.tight_layout()
+plt.show()
+
+# Check correlation and plot for precipitation and windspeed
+for col in ["precip", "windspeed"]:
+    sub = daily_weather.dropna(subset=[col, "TotalSteps"]).copy()
+    print(f"Correlation {col} vs avg daily steps:", round(sub[col].corr(sub["TotalSteps"]), 3))
+
+    sub["bin"] = pd.cut(sub[col], bins=4)
+    avg = sub.groupby("bin")["TotalSteps"].mean()
+
+    plt.figure(figsize=(8,4))
+    plt.bar(avg.index.astype(str), avg.values)
+    plt.xticks(rotation=30, ha="right")
+    plt.title(f"Average Daily Steps by {col} range")
+    plt.xlabel(f"{col} range (precip in mm, windspeed in km/h)")
+    plt.ylabel("Average Daily Steps")
+    plt.tight_layout()
+    plt.show()
