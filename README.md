@@ -109,13 +109,26 @@ In this part we continued investigating the data and defined functions for visua
 ## Bullet 1:
 ## Bullet 2: 
 ## Bullet 3: defining functions for visualizing individual and group level summaries
+- function plot total distance: function that plots total active distance per day for a given individual
 - function plot daily HR: function that plots a linegraph of the heart rate for an individual, either per day or per date range. Note: when a daterange is given, the average heart rate is computed per hour
 - function plot daily steps: function that plots the daily steps for an individual, either per day or per date range. Note: when a daterange is given, the hourly steps are instead shown per 4 hours.
 - function plot weekday activity per class: function that plots boxplots of various activity measures (to be entered as a variable) for each separate user class per weekday
 ## Bullet 4: 
 ---
+# Part 5: Dashboard
+This part shows the script for creating the interactive dashboard. 
+In the sidebar, individuals can enter their IDs and dates to check their individual summaries and statistics on a given day.
+The main part of the dashboard is focused on group level summaries and statistics.
+
+Implemented functions:
+-load_data functions: used to query and load each used dataframe once. Frames are cached for smoother running 
+of the dashboard
+
+Sidebar:
+-functions where individuals can enter their IDs and dates to show relevant plots
 
 # Technologies Used
 - Python (pandas, matplotlib, statsmodels)
 - SQLite (sqlite3)
 - Git & GitHub
+- streamlit

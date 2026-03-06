@@ -82,16 +82,75 @@ plt.show()
 """
 
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
+# connect to database
+conn = sqlite3.connect("fitbit_database.db")
+query = "SELECT * FROM daily_activity"
+df = pd.read_sql_query(query, conn)
+conn.close()
+# Plot bar graph that shows active distance per day or date range
+def plot_total_distance(user_id, start_date=None, end_date=None, df=df):
+    # Convert types to correct form
+        df["Id"] = df["Id"].astype("Int64")
+        df["ActivityDate"] = pd.to_datetime(df["ActivityDate"], format="%m/%d/%Y %I:%M:%S %p")
+        # Filter data for user ID
+        user_data = df[df["Id"] == user_id].copy()
+
+        # Handle single-day case
+        if start_date is not None and end_date is None:
+            #start_date = dt.datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = start_date
+
+        # Filter date range
+        if start_date is not None and end_date is not None:
+            #start_date = dt.datetime.strptime(str(start_date), "%Y-%m-%d")
+            #end_date = dt.datetime.strptime(str(end_date), "%Y-%m-%d")
+
+            user_data = user_data[
+                (user_data["ActivityDate"] >= start_date) &
+                (user_data["ActivityDate"] <= end_date)
+                ]
+
+        if user_data.empty:
+            print("No data available for this selection")
+            return None
+
+        # Sort values
+        user_data = user_data.sort_values("ActivityDate")
+
+        # Format date for plotting
+        user_data["ActivityDate"] = user_data["ActivityDate"].dt.strftime("%Y-%m-%d")
+
+        # Select columns
+        user_data = user_data[
+            ["ActivityDate", "VeryActiveDistance", "ModeratelyActiveDistance", "LightActiveDistance"]
+        ]
+
+        # Create figure
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        user_data.plot(
+            x="ActivityDate",
+            kind="bar",
+            stacked=True,
+            ax=ax,
+            title=f"Total Distance for (User {user_id})"
+        )
+
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Total Distance")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        return fig
 
 # === Create function to plot daily HR per user ===
-def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_database.db"):
-    # Connect to database
-    conn = sqlite3.connect(database)
+# Connect to database
+conn = sqlite3.connect("fitbit_database.db")
+query = "SELECT * FROM heart_rate"
+df = pd.read_sql_query(query, conn)
+conn.close()
 
-    query = "SELECT * FROM heart_rate"
-    df = pd.read_sql_query(query, conn)
-    conn.close()
-
+def plot_daily_HR(user_id, start_date, end_date=None, df = df):
     # Convert types to correct form
     df["Id"] = df["Id"].astype("Int64")
     df["Time"] = pd.to_datetime(df["Time"], format="%m/%d/%Y %I:%M:%S %p")
@@ -175,16 +234,17 @@ def plot_daily_HR(user_id, start_date, end_date=None, database = "fitbit_databas
         plt.tight_layout()
         plt.show()
 
-#plot_daily_HR(2022484408,  start_date="2016-04-02")
-#plot_daily_HR(2022484408,  "2016-04-01", "2016-04-02")
+plot_daily_HR(2022484408,  start_date="2016-04-02")
+plot_daily_HR(2022484408,  "2016-04-01", "2016-04-02")
 
-def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_database.db"):
-    #connect to database
-    conn = sqlite3.connect(database)
+#load data
+#connect to database
+conn = sqlite3.connect("fitbit_database.db")
+query = "SELECT * FROM hourly_steps"
+df = pd.read_sql_query(query, conn)
+conn.close()
 
-    query = "SELECT * FROM hourly_steps"
-    df = pd.read_sql_query(query, conn)
-    conn.close()
+def plot_daily_steps(user_id, start_date, end_date=None, df=df):
     # Convert types to correct form
     df["Id"] = df["Id"].astype("Int64")
     df["Time"] = df["ActivityHour"]
@@ -221,46 +281,43 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
 
     # Sort chronologically
     user_data = user_data.sort_values("Time")
-    if start_date == end_date:  # check if only one day is entered, show daily summary
-        # Plot data in linegraph for one day
-        # Compute max and min HR per day, for plotting later
-        # Get row with max hourly steps
+    #if only one day is entered
+    if start_date == end_date:
+
         max_row = user_data.loc[user_data["StepTotal"].idxmax()]
-        # Get row with min hourly steps
         min_row = user_data.loc[user_data["StepTotal"].idxmin()]
 
-        # Create a summary DataFrame
         st_summary = pd.DataFrame({
             "Type": ["Max", "Min"],
             "StepTotal": [max_row["StepTotal"], min_row["StepTotal"]],
             "Time": [max_row["Time"], min_row["Time"]],
-            "Hour": [max_row["Time"].hour, min_row["Time"].hour]
         })
 
-        # Resample / group by hourly intervals
         user_data = user_data.set_index("Time")
         st_agg = user_data["StepTotal"].resample("h").mean()
 
-        plt.figure(figsize=(12, 6))
-        plt.bar(st_agg.index, st_agg.values, width=0.03, color='skyblue', edgecolor='black')
-        # Format x-axis to show hours only
-        plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%H'))
-        plt.gca().xaxis.set_major_locator(mdates.HourLocator())
-        plt.xlabel("Hour")
-        plt.ylabel("Steps per Hour")
-        plt.title(f"Steps per Hour for User {user_id} on {start_date_string}")
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-        # Add min and max values
+        ax.bar(st_agg.index, st_agg.values, width=0.03,
+               color='skyblue', edgecolor='black')
+
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
+        ax.xaxis.set_major_locator(mdates.HourLocator())
+
+        ax.set_xlabel("Hour")
+        ax.set_ylabel("Steps per Hour")
+        ax.set_title(f"Steps per Hour for User {user_id} on {start_date_string}")
+
         for _, row in st_summary.iterrows():
 
             if row["Type"] == "Max":
                 offset = 10
                 va = "bottom"
-            else:  # Min
+            else:
                 offset = -15
                 va = "top"
 
-            plt.annotate(
+            ax.annotate(
                 f"{row['Type']}: {row['StepTotal']}",
                 xy=(row["Time"], row["StepTotal"]),
                 xytext=(0, offset),
@@ -270,47 +327,42 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
                 arrowprops=dict(arrowstyle="->", color='red')
             )
 
-        plt.show()
-        plt.show()
 
-    # Plot data in linegraph
     else:
-        # Compute max and min HR per day, for plotting later
-        # Get row with max hourly steps
+    #for multiple days
         max_row = user_data.loc[user_data["StepTotal"].idxmax()]
-        # Get row with min hourly steps
         min_row = user_data.loc[user_data["StepTotal"].idxmin()]
 
-        # Create a summary DataFrame
         st_summary = pd.DataFrame({
             "Type": ["Max", "Min"],
             "StepTotal": [max_row["StepTotal"], min_row["StepTotal"]],
             "Time": [max_row["Time"], min_row["Time"]],
-            "Hour": [max_row["Time"].hour, min_row["Time"].hour]
         })
 
-        # Resample / group by 4 hour intervals
         user_data = user_data.set_index("Time")
         st_agg = user_data["StepTotal"].resample("4h").sum()
 
-        plt.figure(figsize=(12, 6))
-        plt.bar(st_agg.index, st_agg.values, width=0.03, color='skyblue', edgecolor='black')
+        fig, ax = plt.subplots(figsize=(12, 6))
 
-        plt.xlabel("Date")
-        plt.ylabel("Steps per 4 Hours")
-        plt.title(f"Steps per 4 Hours for User {user_id} between {start_date_string} and {end_date_string}")
-        # Add min and max values
-        # Add min and max values
+        ax.bar(st_agg.index, st_agg.values, width=0.03,
+               color='skyblue', edgecolor='black')
+
+        ax.set_xlabel("Date")
+        ax.set_ylabel("Steps per 4 Hours")
+        ax.set_title(
+            f"Steps per 4 Hours for User {user_id} between {start_date_string} and {end_date_string}"
+        )
+
         for _, row in st_summary.iterrows():
 
             if row["Type"] == "Max":
                 offset = 10
                 va = "bottom"
-            else:  # Min
+            else:
                 offset = -15
                 va = "top"
 
-            plt.annotate(
+            ax.annotate(
                 f"{row['Type']}: {row['StepTotal']}",
                 xy=(row["Time"], row["StepTotal"]),
                 xytext=(0, offset),
@@ -318,11 +370,10 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
                 ha='center',
                 va=va,
             )
-        plt.show()
 
-
-#plot_daily_steps(2022484408, start_date="2016-04-02")
-#plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06")
+    return fig
+plot_daily_steps(2022484408, start_date="2016-04-02", df = df)
+plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06", df = df)
 
 #=== define function for plotting HR, sleep duration and sleep value per user
 # def individual_sleep(date, userid, database = ):
@@ -332,15 +383,14 @@ def plot_daily_steps(user_id, start_date, end_date=None, database = "fitbit_data
 
 
 #=== Complete Datasetlevel summaries ===
+# connect to database
+conn = sqlite3.connect("fitbit_database.db")
+query = "SELECT * FROM daily_activity"
+df = pd.read_sql_query(query, conn)
+conn.close()
 #plot distribution of steps per weekday for each user class (heavy, light, moderate)
-def plot_weekday_activity_per_class(database = "fitbit_database.db",
+def plot_weekday_activity_per_class(df,
                                     variable="TotalDistance"):
-    # connect to database
-    conn = sqlite3.connect(database)
-
-    query = "SELECT * FROM daily_activity"
-    df = pd.read_sql_query(query, conn)
-    conn.close()
 
     # Convert types to correct form
     df["Id"] = df["Id"].astype("Int64")
@@ -363,24 +413,29 @@ def plot_weekday_activity_per_class(database = "fitbit_database.db",
     # Get day of the week for each activity date
     df["DayOfWeek"] = df["Time"].dt.day_name()
     df["DayOfWeek"] = df["DayOfWeek"].astype("category")
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=df, x="DayOfWeek", y= variable, hue="Class",
-                order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                hue_order=["Light", "Moderate", "Heavy"])
-    plt.xlabel("Day of the week")
-    plt.ylabel(variable)
-    plt.title(f'Distribution of {variable} per weekday and user class')
 
-    plt.show()
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    # Create the boxplot on the axis
+    sns.boxplot(data=df, x="DayOfWeek", y=variable, hue="Class",
+                order=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                hue_order=["Light", "Moderate", "Heavy"], ax=ax)
+
+    ax.set_xlabel("Day of the week")
+    ax.set_ylabel(variable)
+    ax.set_title(f'Distribution of {variable} per weekday and user class')
+    ax.legend(title="User Class")
+
+    #Return the figure instead of showing it
+    return fig
 
 #Generate some plots
-#plot_weekday_activity_per_class(database = "fitbit_database.db",
-#                                variable = "TotalSteps")
+plot_weekday_activity_per_class(df=df, variable = "TotalSteps")
 
 #plot_weekday_activity_per_class(database = "fitbit_database.db",
-#                                variable = "Calories")
-#lot_weekday_activity_per_class(database = "fitbit_database.db",
-#                                variable = "TotalDistance")
+                                #variable = "Calories")
+#plot_weekday_activity_per_class(database = "fitbit_database.db",
+                               #variable = "TotalDistance")
 
 # === Bullet 4: General insights for dashboard (activity, weekends, weather) ===
 conn = sqlite3.connect("fitbit_database.db")
