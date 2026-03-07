@@ -345,61 +345,6 @@ def plot_user_HR_exercise_int(user_id, df_1=df_HR, df_2=df_intensity):
 
     return fig
 
-'''
-df_HR["Id"] = df_HR["Id"].astype("int64")
-df_HR["Time"] = pd.to_datetime(df_HR["Time"], format="%m/%d/%Y %I:%M:%S %p")
-df_HR["Hour"] = df_HR["Time"].dt.floor('h')
-
-# Calulate the average heart rate for each hour for each user
-df_hr_hourly = (
-    df_HR.groupby(["Id", "Hour"])["Value"]
-    .mean()
-    .reset_index()
-)
-
-query = """
-SELECT *
-FROM hourly_intensity
-"""
-df_intensity = pd.read_sql_query(query, conn)
-df_intensity["Id"] = df_intensity["Id"].astype("int64")
-df_intensity["ActivityHour"] = pd.to_datetime(df_intensity["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p")
-
-df_intensity.rename(columns={'ActivityHour': 'Hour'}, inplace=True)
-
-df_int_HR = pd.merge(df_hr_hourly, df_intensity, on=["Id", "Hour"], how="inner")
-df_int_HR.rename(columns={'Value': 'AvgHeartRate'}, inplace=True)
-
-def plot_user_HR_exercise_int(id):
-    
-    df_user = df_int_HR[df_int_HR["Id"] == id].copy()
-    fig, ax1 = plt.subplots(figsize=(12, 6))
-
-    line1, = ax1.plot(
-        df_user["Hour"], df_user["AvgHeartRate"], color="red", label="Average Heart Rate", linewidth=2
-    )
-    ax1.set_ylabel("Average Heart Rate", color="red")
-    ax1.tick_params(axis='y', labelcolor='red')
-
-    ax2 = ax1.twinx()
-    line2, = ax2.plot(
-        df_user["Hour"], df_user["TotalIntensity"], color="blue", label="Total Intensity", linewidth=2
-    )
-    ax2.set_ylabel("Total Intensity", color="blue")
-    ax2.tick_params(axis='y', labelcolor='blue')
-
-    handles = [line1, line2]
-    labels = ['Average Heart Rate', 'Total Intensity']
-    ax1.legend(handles, labels, loc='upper left')
-
-    plt.title(f"Average Heart Rate and Total Intensity for User {id}")
-    plt.xlabel("Hour")
-    plt.tight_layout()
-    plt.show()
-
-
-#plot_user_HR_exercise_int(8877689391)
-'''
 # === Bullet 6: Investigate the relationship between weather factors and activity of individuals === 
 weather = pd.read_csv("data/ChicagoWeather.csv")
 weather['datetime'] = pd.to_datetime(weather['datetime'], format="%Y-%m-%d")
