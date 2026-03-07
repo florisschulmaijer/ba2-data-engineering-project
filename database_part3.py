@@ -272,13 +272,80 @@ plt.ylabel("Average minutes asleep")
 plt.tight_layout()
 plt.show()
 
+
+
 # === Bullet 5: Define a function that takes an ID as inpput and returns a figure that contains heart rate and total intensity of the exercise taken ===
+import pandas as pd
+import matplotlib.pyplot as plt
 query = """
 SELECT *
 FROM heart_rate
 """
 
 df_HR = pd.read_sql_query(query, conn)
+query = """
+SELECT *
+FROM hourly_intensity
+"""
+df_intensity = pd.read_sql_query(query, conn)
+def plot_user_HR_exercise_int(user_id, df_1=df_HR, df_2=df_intensity):
+    df_hr = df_1.copy()
+    df_hr["Id"] = df_hr["Id"].astype("int64")
+    df_hr["Time"] = pd.to_datetime(df_hr["Time"], format="%m/%d/%Y %I:%M:%S %p")
+    df_hr["Hour"] = df_hr["Time"].dt.floor("h")
+
+    df_hr_hourly = (
+        df_hr.groupby(["Id", "Hour"])["Value"]
+        .mean()
+        .reset_index()
+        .rename(columns={"Value": "AvgHeartRate"})
+    )
+
+    df_intensity = df_2.copy()
+    df_intensity["Id"] = df_intensity["Id"].astype("int64")
+    df_intensity["ActivityHour"] = pd.to_datetime(
+        df_intensity["ActivityHour"], format="%m/%d/%Y %I:%M:%S %p"
+    )
+    df_intensity.rename(columns={"ActivityHour": "Hour"}, inplace=True)
+
+    df_merged = pd.merge(
+        df_hr_hourly, df_intensity, on=["Id", "Hour"], how="inner"
+    )
+
+    df_user = df_merged[df_merged["Id"] == user_id].copy()
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    line1, = ax1.plot(
+        df_user["Hour"],
+        df_user["AvgHeartRate"],
+        color="red",
+        linewidth=2,
+        label="Average Heart Rate"
+    )
+    ax1.set_ylabel("Average Heart Rate", color="red")
+    ax1.tick_params(axis="y", labelcolor="red")
+
+    ax2 = ax1.twinx()
+    line2, = ax2.plot(
+        df_user["Hour"],
+        df_user["TotalIntensity"],
+        color="blue",
+        linewidth=2,
+        label="Total Intensity"
+    )
+    ax2.set_ylabel("Total Intensity", color="blue")
+    ax2.tick_params(axis="y", labelcolor="blue")
+
+    ax1.legend([line1, line2], ["Average Heart Rate", "Total Intensity"], loc="upper left")
+
+    ax1.set_title(f"Average Heart Rate and Total Intensity for User {user_id}")
+    ax1.set_xlabel("Hour")
+    fig.tight_layout()
+
+    return fig
+
+'''
 df_HR["Id"] = df_HR["Id"].astype("int64")
 df_HR["Time"] = pd.to_datetime(df_HR["Time"], format="%m/%d/%Y %I:%M:%S %p")
 df_HR["Hour"] = df_HR["Time"].dt.floor('h')
@@ -332,7 +399,7 @@ def plot_user_HR_exercise_int(id):
 
 
 #plot_user_HR_exercise_int(8877689391)
-
+'''
 # === Bullet 6: Investigate the relationship between weather factors and activity of individuals === 
 weather = pd.read_csv("data/ChicagoWeather.csv")
 weather['datetime'] = pd.to_datetime(weather['datetime'], format="%Y-%m-%d")
