@@ -51,7 +51,7 @@ def plot_daily_calories_intensity(df):
 # Relationship between calories and exercise intensity
 plot_daily_calories_intensity(daily_df)
 
-"""
+
 # Scatter plot for minutes sleep and daily steps
 query = ''' select * from hourly_steps'''
 daily_steps = pd.read_sql_query(query, conn)
@@ -79,7 +79,7 @@ plt.title("Daily Steps vs. Sleep Duration")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-"""
+
 
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
 # connect to database
@@ -425,9 +425,20 @@ def plot_weekday_activity_per_class(df,
     ax.set_ylabel(variable)
     ax.set_title(f'Distribution of {variable} per weekday and user class')
     ax.legend(title="User Class")
+    # --- SUMMARY STATISTICS ---
+    var_series = df[variable].dropna()
 
-    #Return the figure instead of showing it
-    return fig
+    min_val = var_series.min()
+    max_val = var_series.max()
+    median_val = var_series.median()
+
+    conclusion = (
+        f"For **{variable}**, the minimum observed value is **{min_val:.2f}**, "
+        f"the maximum is **{max_val:.2f}**, and the median is **{median_val:.2f}** "
+        f"across all participants and weekdays."
+    )
+
+    return fig, conclusion
 
 #Generate some plots
 plot_weekday_activity_per_class(df=df, variable = "TotalSteps")

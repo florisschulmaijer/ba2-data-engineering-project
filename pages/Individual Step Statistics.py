@@ -5,7 +5,7 @@ import pandas as pd
 import datetime
 import sqlite3
 
-from database_part3 import df_activity, df_hourly_steps
+from database_part3 import df_activity, df_hourly_steps, plot_user_HR_exercise_int
 from datawrangling_part4 import *
 st.write("")
 #=== Functions to connect to databases and load Data ===
@@ -32,30 +32,21 @@ def load_heart_rate_data(database="fitbit_database.db"):
     df_heartrate = pd.read_sql_query(query, conn)
     conn.close()
     return df_heartrate
+def load_intensity_data(database="fitbit_database.db"):
+    conn = sqlite3.connect("fitbit_database.db")
+    query = "SELECT * FROM hourly_intensity"
+    df_hourly_intensity = pd.read_sql_query(query, conn)
+    conn.close()
+    return df_hourly_intensity
+
 #call functions
 df_heart_rate =load_heart_rate_data()
 df_steps = load_hourly_steps_data()
-df_activity= load_activity_data()
+df_activity = load_activity_data()
+df_hourly_intensity = load_intensity_data()
 
 
-# === Main Title and Subheaders ===
-st.title("FitBit Data In Chicago 2016")
-st.header("Summary dashboard for 33 Fitbit Users in Chicago")
-st.markdown("This Dashboard shows summary statistics and individual statistics for Fitbit Users in Chicago")
-st.subheader("Summary Statistics for All Users")
-st.caption("Summaries for activity metrics for all users, based on activity class")
-
-# Streamlit app
-st.title("Activity per Weekday, separated by user class")
-activity = st.selectbox('Choose Activity Metric', ['TotalSteps'
-    ,'TotalDistance','TrackerDistance','VeryActiveDistance','LoggedActivitiesDistance'
-    ,'ModeratelyActiveDistance','LightActiveDistance','SedentaryActiveDistance',
-    'VeryActiveMinutes','FairlyActiveMinutes','LightlyActiveMinutes','SedentaryMinutes','Calories'])
-fig = plot_weekday_activity_per_class(df = df_activity, variable= activity)
-#Display figure in pyplot
-st.pyplot(fig)
-
-
+st.title("Individual User Statistics")
 
 # === Code for the Sidebar ===
 st.sidebar.title("Individual Users")
@@ -70,3 +61,6 @@ st.sidebar.write("Your selected start and end dates:", start_date, end_date)
 fig_steps = plot_daily_steps(user_id = user_id, start_date = start_date, end_date = end_date, df = df_steps)
 #Display figure in pyplot
 st.pyplot(fig_steps)
+
+fig_heartrate_intensity = plot_user_HR_exercise_int(user_id=user_id, df_1=df_heart_rate, df_2=df_hourly_intensity)
+st.pyplot(fig_heartrate_intensity)
