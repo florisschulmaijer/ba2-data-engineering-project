@@ -160,18 +160,18 @@ user_id = st.sidebar.selectbox('Choose a User ID', [2022484408, 2026352035, 2347
        5553957443, 5577150313, 6117666160, 6391747486, 6775888955,
        6962181067, 7007744171, 8792009665, 8877689391])
 
-min_dt = datetime.datetime(2016, 3, 26, 0, 0)
-max_dt = datetime.datetime(2016, 4, 12, 23, 59)
+min_dt = datetime.date(2016, 3, 26)
+max_dt = datetime.date(2016, 4, 12)
 
-start_date = st.sidebar.datetime_input(
-    "Start datetime",
+start_date = st.sidebar.date_input(
+    "Start date",
     min_value=min_dt,
     max_value=max_dt,
     value=min_dt
 )
 
-end_date = st.sidebar.datetime_input(
-    "End datetime",
+end_date = st.sidebar.date_input(
+    "End date",
     min_value=min_dt,
     max_value=max_dt,
     value=max_dt

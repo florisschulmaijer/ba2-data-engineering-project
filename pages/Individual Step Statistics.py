@@ -5,62 +5,92 @@ import pandas as pd
 import datetime
 import sqlite3
 
-from database_part3 import df_activity, df_hourly_steps, plot_user_HR_exercise_int
 from datawrangling_part4 import *
-st.write("")
-#=== Functions to connect to databases and load Data ===
-#Note: function to load activity dataframe, returns daily activity dataframe as df activity,
-#use df_activity for functions/visualizations where the daily activity dataframe is queried!
-@st.cache_data #cache data to ensure faster loading/prevent slow dashboard
+
+# === Functions to connect to databases and load Data ===
+@st.cache_data
 def load_activity_data(database="fitbit_database.db"):
     conn = sqlite3.connect(database)
     df_activity = pd.read_sql_query("SELECT * FROM daily_activity", conn)
     conn.close()
     return df_activity
-#return hourly steps dataframe
+
 @st.cache_data
 def load_hourly_steps_data(database="fitbit_database.db"):
     conn = sqlite3.connect(database)
     df_steps = pd.read_sql_query("SELECT * FROM hourly_steps", conn)
     conn.close()
     return df_steps
-#load heart rate data
-@st.cache_data
-def load_heart_rate_data(database="fitbit_database.db"):
-    conn = sqlite3.connect("fitbit_database.db")
-    query = "SELECT * FROM heart_rate"
-    df_heartrate = pd.read_sql_query(query, conn)
-    conn.close()
-    return df_heartrate
-def load_intensity_data(database="fitbit_database.db"):
-    conn = sqlite3.connect("fitbit_database.db")
-    query = "SELECT * FROM hourly_intensity"
-    df_hourly_intensity = pd.read_sql_query(query, conn)
-    conn.close()
-    return df_hourly_intensity
 
-#call functions
-df_heart_rate =load_heart_rate_data()
+# Call functions
 df_steps = load_hourly_steps_data()
 df_activity = load_activity_data()
-df_hourly_intensity = load_intensity_data()
 
+# Prepare df_overview
+df_overview = df_activity.copy()
+df_overview["ActivityDate"] = pd.to_datetime(df_overview["ActivityDate"], format="%m/%d/%Y")
+df_overview["Id"] = df_overview["Id"].astype("Int64")
+df_overview["Class"] = df_overview.groupby("Id")["Id"].transform("count").apply(
+    lambda days: "Light" if days <= 10 else ("Moderate" if days <= 15 else "Heavy")
+)
 
-st.title("Individual User Statistics")
+st.title("Individual User Step Statistics")
 
-# === Code for the Sidebar ===
+# === Sidebar ===
 st.sidebar.title("Individual Users")
-st.sidebar.markdown("Enter your user ID here for individual insights and summaries on specified dates. If you want to only see data from one day, only enter your start date.")
-st.sidebar.write("Your User ID: ",)
-user_id = st.sidebar.number_input('Enter your user ID', 0, 1503960366)
+st.sidebar.markdown("Select a user ID to view individual step insights.")
 
-start_date = st.sidebar.datetime_input("Enter your start date", value = None)
-end_date = st.sidebar.datetime_input("Enter your end date", value = None)
-st.sidebar.write("Your selected start and end dates:", start_date, end_date)
-#display individual summaries in plots
-fig_steps = plot_daily_steps(user_id = user_id, start_date = start_date, end_date = end_date, df = df_steps)
-#Display figure in pyplot
-st.pyplot(fig_steps)
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Select a User**")
+available_ids = sorted(df_overview["Id"].dropna().unique().tolist())
+user_id = st.sidebar.selectbox("Select a User ID", available_ids)
 
-fig_heartrate_intensity = plot_user_HR_exercise_int(user_id=user_id, df_1=df_heart_rate, df_2=df_hourly_intensity)
-st.pyplot(fig_heartrate_intensity)
+# Quick stats for selected user
+user_data = df_overview[df_overview["Id"] == user_id]
+st.sidebar.markdown("---")
+st.sidebar.markdown(f"**Stats for User {user_id}**")
+st.sidebar.metric("User Class", user_data["Class"].iloc[0])
+st.sidebar.metric("Days Recorded", len(user_data))
+st.sidebar.metric("Avg Steps", f"{int(user_data['TotalSteps'].mean()):,}")
+st.sidebar.metric("Avg Calories", f"{int(user_data['Calories'].mean()):,}")
+
+# Progress bar comparison
+st.sidebar.markdown("---")
+st.sidebar.markdown("**How does this user compare?**")
+avg_steps_all = int(df_overview["TotalSteps"].mean())
+user_avg_steps = int(user_data["TotalSteps"].mean())
+steps_percentile = (df_overview.groupby("Id")["TotalSteps"].mean() < user_avg_steps).mean()
+
+if steps_percentile >= 0.5:
+    st.sidebar.success(f"Above average — top {int((1 - steps_percentile) * 100)}% of users in daily steps")
+else:
+    st.sidebar.info(f"Below average — bottom {int(steps_percentile * 100)}% of users in daily steps")
+
+st.sidebar.markdown(f"Their avg: **{user_avg_steps:,}** steps vs group avg: **{avg_steps_all:,}** steps")
+st.sidebar.progress(min(user_avg_steps / (avg_steps_all * 2), 1.0))
+
+# Date filter: only allow dates that exist for this user
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Date Filter**")
+user_dates = sorted(user_data["ActivityDate"].dt.date.unique())
+
+start_date = st.sidebar.selectbox(
+    "Select start date",
+    options=user_dates,
+    index=0,
+    format_func=lambda d: d.strftime("%d/%m/%Y")
+)
+end_date = st.sidebar.selectbox(
+    "Select end date",
+    options=user_dates,
+    index=len(user_dates) - 1,
+    format_func=lambda d: d.strftime("%d/%m/%Y")
+)
+
+st.sidebar.write(f"Selected: {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}")
+
+if start_date > end_date:
+    st.sidebar.warning("Start date must be before end date.")
+else:
+    fig_steps = plot_daily_steps(user_id=user_id, start_date=start_date, end_date=end_date, df=df_steps)
+    st.pyplot(fig_steps)
