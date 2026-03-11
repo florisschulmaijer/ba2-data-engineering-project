@@ -378,6 +378,132 @@ plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06", df 
 #=== define function for plotting HR, sleep duration and sleep value per user
 # def individual_sleep(date, userid, database = ):
 
+# Set up query
+conn = sqlite3.connect("fitbit_database.db")
+query = """
+SELECT *
+FROM minute_sleep
+"""
+df_sleep = pd.read_sql_query(query, conn)
+# Convert Date to datetime and ID to category
+df_sleep["date"] = pd.to_datetime(df_sleep["date"])
+df_sleep["Id"] = df_sleep["Id"].astype("category")
+#merge heart rate and sleep data
+query = """
+SELECT *
+FROM heart_rate
+"""
+df_HR = pd.read_sql_query(query, conn)
+# Convert Date to datetime and ID to category
+df_HR["Time"] = pd.to_datetime(df_HR["Time"])
+df_HR["Id"] = df_HR["Id"].astype("category")
+
+#merge dataframes and rename columns
+df_merged = pd.merge(
+    df_sleep,
+    df_HR,
+    left_on=['date', 'Id'],
+    right_on=['Time', 'Id'],
+    how='inner'
+)
+df_merged["sleep_value"] =df_merged["value"]
+df_merged["HR"] =df_merged["Value"]
+df = df_merged[["Id", "sleep_value", "HR", "Time", "logId"]]
+
+#define function that plots heart rate and sleep values for individual users on a given day
+def plot_sleep_HR(user_id, start_date, df=df):
+
+    df["Id"] = df["Id"].astype("Int64")
+    df["Time"] = pd.to_datetime(df["Time"])
+
+    start_date_string = start_date
+    start_date = pd.to_datetime(start_date)
+
+    # Filter for user
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Filter for the selected day
+    # Expand search window to include sleep before midnight
+    sleep_day_start = start_date - pd.Timedelta(hours=6) #define sleep day as 18:00 to 18:00
+    sleep_day_start = start_date - pd.Timedelta(hours=6)
+
+    user_data = df[
+        (df["Time"] >= sleep_day_start) &
+        (df["Time"] < sleep_day_start + pd.Timedelta(days=1))
+        ]
+
+    if user_data.empty:
+        print("No data in selected date range")
+        return
+    #Select longest sleep session, exclude naps
+    session_lengths = user_data.groupby("logId")["Time"].count()
+    longest_session = session_lengths.idxmax()
+
+    user_data = user_data[user_data["logId"] == longest_session]
+
+    # Sort chronologically
+    user_data = user_data.sort_values("Time")
+
+    user_data = user_data.sort_values("Time")
+    fig, ax1 = plt.subplots(figsize=(12,6))
+
+    # Color mapping for sleep stages
+    colors = {
+        1: "blue",      # asleep
+        2: "green",    # restless
+        3: "orange"        # awake
+    }
+
+    # Plot bars for sleep stages
+    for stage, color in colors.items():
+        stage_data = user_data[user_data["sleep_value"] == stage]
+        ax1.bar(
+            stage_data["Time"],
+            stage_data["sleep_value"],
+            width=pd.Timedelta(minutes=5),
+            color=color,
+            label=f"{stage}"
+        )
+
+    ax1.set_ylabel("Sleep Value")
+
+    # Heart rate axis
+    ax2 = ax1.twinx()
+    ax2.plot(
+        user_data["Time"],
+        user_data["HR"],
+        color="red",
+        linewidth=2,
+        label="Heart Rate"
+    )
+    ax2.set_ylabel("Heart Rate (bpm)")
+
+    # Time formatting: every 10 minutes
+    ax1.xaxis.set_major_locator(mdates.MinuteLocator(interval=30))
+    ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+
+    ax1.set_xlabel("Time")
+
+    ax1.set_title(f"Sleep and Heart Rate for User {user_id} around {start_date_string}")
+
+    # Custom legend
+    from matplotlib.patches import Patch
+
+    legend_elements = [
+        Patch(facecolor='blue', label='Sleep Value 1 = Asleep'),
+        Patch(facecolor='green', label='Sleep Value 2 = Restless'),
+        Patch(facecolor='orange', label='Sleep Value 3 = Awake')
+    ]
+
+    ax1.legend(handles=legend_elements, loc="upper left")
+
+    fig.tight_layout()
+
+    return fig
+#%%
+plot_sleep_HR(user_id = 2347167796	, start_date = "2016-03-29", df = df)
+
+
 
 
 
