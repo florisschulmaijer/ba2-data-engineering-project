@@ -194,7 +194,7 @@ python scripts/database_part3.py
 
 ## Team & Collaboration
 
-This project was developed by a team of 3 students using GitHub for version control. Each new feature was developed on a separate branch and merged into `main` via pull requests.
+This project was developed by a team of 4 students using GitHub for version control. Each new feature was developed on a separate branch and merged into `main` via pull requests.
 
 **Workflow:**
 1. Create a new branch: `git checkout -b <branch-name>`

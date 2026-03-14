@@ -51,7 +51,6 @@ def plot_daily_calories_intensity(df):
 # Relationship between calories and exercise intensity
 plot_daily_calories_intensity(daily_df)
 
-
 # Scatter plot for minutes sleep and daily steps
 query = ''' select * from hourly_steps'''
 daily_steps = pd.read_sql_query(query, conn)
@@ -79,7 +78,6 @@ plt.title("Daily Steps vs. Sleep Duration")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
 
 # === Bullet 3: Create functions for graphical and statistical summaries for individuals. ===
 # connect to database
@@ -327,7 +325,6 @@ def plot_daily_steps(user_id, start_date, end_date=None, df=df):
                 arrowprops=dict(arrowstyle="->", color='red')
             )
 
-
     else:
     #for multiple days
         max_row = user_data.loc[user_data["StepTotal"].idxmax()]
@@ -377,9 +374,6 @@ plot_daily_steps(2022484408, start_date="2016-04-02", end_date="2016-04-06", df 
 
 #=== define function for plotting HR, sleep duration and sleep value per user
 # def individual_sleep(date, userid, database = ):
-
-
-
 
 
 #=== Complete Datasetlevel summaries ===

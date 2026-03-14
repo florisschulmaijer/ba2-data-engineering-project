@@ -13,11 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Shared colour palette
-BG_COLOR     = "#111420"
-C_BLUE       = "#4C9BE8"
-C_ORANGE     = "#E8834C"
-C_GREEN      = "#52C97A"
+BG_COLOR = "#111420"
+C_BLUE = "#4C9BE8"
+C_ORANGE = "#E8834C"
+C_GREEN = "#52C97A"
 CHART_COLORS = [C_BLUE, C_ORANGE, C_GREEN]
 
 def style_ax(ax):
@@ -74,14 +73,14 @@ def load_heart_rate_data(database="fitbit_database.db"):
     conn.close()
     return df
 
-df_activity   = load_activity_data()
+df_activity = load_activity_data()
 df_heart_rate = load_heart_rate_data()
 
 # Prepare overview frame
 df_overview = df_activity.copy()
 df_overview["ActivityDate"] = pd.to_datetime(df_overview["ActivityDate"], format="%m/%d/%Y")
-df_overview["Id"]           = df_overview["Id"].astype("Int64")
-df_overview["Class"]        = df_overview.groupby("Id")["Id"].transform("count").apply(
+df_overview["Id"] = df_overview["Id"].astype("Int64")
+df_overview["Class"] = df_overview.groupby("Id")["Id"].transform("count").apply(
     lambda days: "Light" if days <= 10 else ("Moderate" if days <= 15 else "Heavy")
 )
 
@@ -102,24 +101,24 @@ tab_overview, tab_leaderboard, tab_weekday = st.tabs([
     "Weekday Patterns",
 ])
 
-# ── Tab 1: Overview ───────────────────────────────────────────────────────────
+# Tab 1: Overview 
 with tab_overview:
 
     # KPI cards
-    n_users       = df_overview["Id"].nunique()
-    date_min      = df_overview["ActivityDate"].min()
-    date_max      = df_overview["ActivityDate"].max()
-    avg_steps     = int(df_overview["TotalSteps"].mean())
-    avg_calories  = int(df_overview["Calories"].mean())
+    n_users = df_overview["Id"].nunique()
+    date_min = df_overview["ActivityDate"].min()
+    date_max = df_overview["ActivityDate"].max()
+    avg_steps = int(df_overview["TotalSteps"].mean())
+    avg_calories = int(df_overview["Calories"].mean())
     avg_sedentary = int(df_overview["SedentaryMinutes"].mean())
 
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    with c1: kpi_card("Participants",       str(n_users),                    C_BLUE)
-    with c2: kpi_card("Study Start",        date_min.strftime("%d/%m/%Y"),   C_BLUE)
-    with c3: kpi_card("Study End",          date_max.strftime("%d/%m/%Y"),   C_BLUE)
-    with c4: kpi_card("Avg Daily Steps",    f"{avg_steps:,}",                C_ORANGE)
-    with c5: kpi_card("Avg Daily Calories", f"{avg_calories:,}",             C_GREEN)
-    with c6: kpi_card("Avg Sedentary Min",  f"{avg_sedentary:,}",            "#9B9EAC")
+    with c1: kpi_card("Participants", str(n_users), C_BLUE)
+    with c2: kpi_card("Study Start", date_min.strftime("%d/%m/%Y"), C_BLUE)
+    with c3: kpi_card("Study End", date_max.strftime("%d/%m/%Y"), C_BLUE)
+    with c4: kpi_card("Avg Daily Steps", f"{avg_steps:,}", C_ORANGE)
+    with c5: kpi_card("Avg Daily Calories", f"{avg_calories:,}", C_GREEN)
+    with c6: kpi_card("Avg Sedentary Min",  f"{avg_sedentary:,}", "#9B9EAC")
 
     st.write("")
 
@@ -169,7 +168,7 @@ with tab_overview:
         plt.tight_layout()
         st.pyplot(fig_bar)
 
-# ── Tab 2: Leaderboard ────────────────────────────────────────────────────────
+# Tab 2: Leaderboard
 with tab_leaderboard:
 
     user_avg = (
@@ -187,11 +186,11 @@ with tab_leaderboard:
     )
     user_avg.insert(0, "Rank", range(1, len(user_avg) + 1))
     user_avg = user_avg.rename(columns={
-        "Id":            "User ID",
-        "avg_steps":     "Avg Daily Steps",
-        "avg_calories":  "Avg Daily Calories",
+        "Id": "User ID",
+        "avg_steps": "Avg Daily Steps",
+        "avg_calories": "Avg Daily Calories",
         "days_recorded": "Days Recorded",
-        "user_class":    "Class",
+        "user_class": "Class",
     })
 
     top5    = user_avg.head(5).set_index("Rank")
@@ -211,7 +210,7 @@ with tab_leaderboard:
         st.markdown("**Full ranking**")
         st.dataframe(user_avg.set_index("Rank"), use_container_width=True)
 
-# ── Tab 3: Weekday Patterns ───────────────────────────────────────────────────
+# Tab 3: Weekday Patterns
 with tab_weekday:
 
     with st.container(border=True):

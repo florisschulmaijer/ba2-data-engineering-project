@@ -13,10 +13,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Shared colour palette
 BG_COLOR = "#111420"
-C_RED    = "#D62728"
-C_BLUE   = "#4C9BE8"
+C_RED = "#D62728"
+C_BLUE = "#4C9BE8"
 
 def style_ax(ax):
     ax.set_facecolor(BG_COLOR)
@@ -143,7 +142,7 @@ end_date   = st.sidebar.date_input("End date",   min_value=min_dt, max_value=max
 
 # Page header
 st.title("Heart Rate & Intensity")
-st.caption(f"User {user_id}  ·  {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}  ·  HR (red) vs intensity (blue)")
+st.caption(f"User {user_id}·{start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}  ·  HR (red) vs intensity (blue)")
 st.divider()
 
 # Chart

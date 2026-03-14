@@ -13,7 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Shared colour palette
 BG_COLOR = "#111420"
 C_BLUE   = "#4C9BE8"
 C_ORANGE = "#E8834C"
@@ -43,14 +42,14 @@ def load_hourly_steps_data(database="fitbit_database.db"):
     conn.close()
     return df
 
-df_steps    = load_hourly_steps_data()
+df_steps = load_hourly_steps_data()
 df_activity = load_activity_data()
 
 # Prepare overview
 df_overview = df_activity.copy()
 df_overview["ActivityDate"] = pd.to_datetime(df_overview["ActivityDate"], format="%m/%d/%Y")
-df_overview["Id"]           = df_overview["Id"].astype("Int64")
-df_overview["Class"]        = df_overview.groupby("Id")["Id"].transform("count").apply(
+df_overview["Id"] = df_overview["Id"].astype("Int64")
+df_overview["Class"] = df_overview.groupby("Id")["Id"].transform("count").apply(
     lambda days: "Light" if days <= 10 else ("Moderate" if days <= 15 else "Heavy")
 )
 
@@ -61,8 +60,8 @@ st.sidebar.caption("Per-user step data with date filter.")
 st.sidebar.divider()
 
 available_ids = sorted(df_overview["Id"].dropna().unique().tolist())
-user_id       = st.sidebar.selectbox("User ID", available_ids)
-user_data     = df_overview[df_overview["Id"] == user_id]
+user_id = st.sidebar.selectbox("User ID", available_ids)
+user_data = df_overview[df_overview["Id"] == user_id]
 
 st.sidebar.divider()
 user_dates = sorted(user_data["ActivityDate"].dt.date.unique())
@@ -77,16 +76,16 @@ end_date = st.sidebar.selectbox(
 
 # Page header
 st.title("Step Statistics")
-st.caption(f"User {user_id}  ·  {start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}")
+st.caption(f"User {user_id}.{start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}")
 st.divider()
 
 # === User overview (moved from sidebar) ===
 with st.container(border=True):
     st.markdown("**User Overview**")
     u1, u2, u3, u4 = st.columns(4)
-    u1.metric("User Class",     user_data["Class"].iloc[0])
-    u2.metric("Days Recorded",  len(user_data))
-    u3.metric("Avg Daily Steps",    f"{int(user_data['TotalSteps'].mean()):,}")
+    u1.metric("User Class", user_data["Class"].iloc[0])
+    u2.metric("Days Recorded", len(user_data))
+    u3.metric("Avg Daily Steps", f"{int(user_data['TotalSteps'].mean()):,}")
     u4.metric("Avg Daily Calories", f"{int(user_data['Calories'].mean()):,}")
 
 st.write("")
@@ -114,17 +113,17 @@ else:
             st.markdown("**Period Summary**")
             st.caption("Totals and averages for the selected date range.")
             c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Total Steps",       f"{int(date_filtered['TotalSteps'].sum()):,}")
-            c2.metric("Avg Daily Steps",   f"{int(date_filtered['TotalSteps'].mean()):,}")
-            c3.metric("Avg Calories/Day",  f"{int(date_filtered['Calories'].mean()):,}")
+            c1.metric("Total Steps", f"{int(date_filtered['TotalSteps'].sum()):,}")
+            c2.metric("Avg Daily Steps", f"{int(date_filtered['TotalSteps'].mean()):,}")
+            c3.metric("Avg Calories/Day", f"{int(date_filtered['Calories'].mean()):,}")
             c4.metric("Avg Active Min/Day", f"{int((date_filtered['VeryActiveMinutes'] + date_filtered['FairlyActiveMinutes']).mean()):,}")
     else:
         st.info("No data for this date range.")
 
     # Group comparison
-    avg_steps_all    = int(df_overview["TotalSteps"].mean())
-    user_avg_steps   = int(user_data["TotalSteps"].mean())
-    per_user_avgs    = df_overview.groupby("Id")["TotalSteps"].mean()
+    avg_steps_all = int(df_overview["TotalSteps"].mean())
+    user_avg_steps = int(user_data["TotalSteps"].mean())
+    per_user_avgs = df_overview.groupby("Id")["TotalSteps"].mean()
     steps_percentile = (per_user_avgs < user_avg_steps).mean()
 
     with st.container(border=True):

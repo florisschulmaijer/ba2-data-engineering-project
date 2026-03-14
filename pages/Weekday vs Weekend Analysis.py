@@ -13,9 +13,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Shared colour palette
 BG_COLOR = "#111420"
-C_BLUE   = "#4C9BE8"   # weekday
+C_BLUE = "#4C9BE8"   # weekday
 C_ORANGE = "#E8834C"   # weekend
 
 def style_ax(ax):
@@ -54,18 +53,18 @@ df_sleep_raw = load_sleep()
 # Process activity data
 df = df_activity.copy()
 df["ActivityDate"] = pd.to_datetime(df["ActivityDate"], format="%m/%d/%Y")
-df["Id"]           = df["Id"].astype("Int64")
-df["DayOfWeek"]    = df["ActivityDate"].dt.day_name()
-df["IsWeekend"]    = df["ActivityDate"].dt.dayofweek >= 5
-df["DayType"]      = df["IsWeekend"].map({True: "Weekend", False: "Weekday"})
-df["Class"]        = df.groupby("Id")["Id"].transform("count").apply(
+df["Id"] = df["Id"].astype("Int64")
+df["DayOfWeek"] = df["ActivityDate"].dt.day_name()
+df["IsWeekend"] = df["ActivityDate"].dt.dayofweek >= 5
+df["DayType"] = df["IsWeekend"].map({True: "Weekend", False: "Weekday"})
+df["Class"] = df.groupby("Id")["Id"].transform("count").apply(
     lambda days: "Light" if days <= 10 else ("Moderate" if days <= 15 else "Heavy")
 )
 
 # Process sleep data
-df_sleep_raw["date"]   = pd.to_datetime(df_sleep_raw["date"])
-df_sleep_raw["day"]    = df_sleep_raw["date"].dt.normalize()
-df_sleep_raw["Id"]     = df_sleep_raw["Id"].astype("Int64")
+df_sleep_raw["date"] = pd.to_datetime(df_sleep_raw["date"])
+df_sleep_raw["day"] = df_sleep_raw["date"].dt.normalize()
+df_sleep_raw["Id"] = df_sleep_raw["Id"].astype("Int64")
 df_sleep_raw["asleep"] = (df_sleep_raw["value"] == 1).astype(int)
 df_sleep_daily = (
     df_sleep_raw.groupby(["Id", "day"])["asleep"]
@@ -78,7 +77,7 @@ df_merged = df.merge(df_sleep_daily, on=["Id", "ActivityDate"], how="left")
 
 # === Sidebar user filter — defined BEFORE plots so selection affects all charts ===
 st.sidebar.markdown("**Filter by user (optional)**")
-all_ids     = sorted(df_merged["Id"].dropna().unique().tolist())
+all_ids = sorted(df_merged["Id"].dropna().unique().tolist())
 selected_id = st.sidebar.selectbox(
     "User ID",
     [None] + all_ids,
@@ -100,11 +99,11 @@ st.divider()
 with st.container(border=True):
     st.markdown("**Weekend averages vs weekday baseline**")
     metrics_config = {
-        "TotalSteps":        ("Avg Steps",       C_BLUE),
-        "Calories":          ("Avg Calories",     C_ORANGE),
-        "VeryActiveMinutes": ("Very Active Min",  "#52C97A"),
-        "SedentaryMinutes":  ("Sedentary Min",    "#9B9EAC"),
-        "asleep_min":        ("Sleep (min)",      "#A78BFA"),
+        "TotalSteps": ("Avg Steps", C_BLUE),
+        "Calories": ("Avg Calories", C_ORANGE),
+        "VeryActiveMinutes": ("Very Active Min","#52C97A"),
+        "SedentaryMinutes": ("Sedentary Min", "#9B9EAC"),
+        "asleep_min": ("Sleep (min)", "#A78BFA"),
     }
     cols = st.columns(5)
     for col, (metric, (lbl, color)) in zip(cols, metrics_config.items()):
@@ -118,10 +117,10 @@ st.write("")
 # Bar charts
 with st.container(border=True):
     st.markdown("**Side-by-side comparison**")
-    colors_dt   = {"Weekday": C_BLUE, "Weekend": C_ORANGE}
+    colors_dt = {"Weekday": C_BLUE, "Weekend": C_ORANGE}
     plot_metrics = [
         ("TotalSteps", "Avg Daily Steps"),
-        ("Calories",   "Avg Daily Calories"),
+        ("Calories", "Avg Daily Calories"),
         ("asleep_min", "Avg Sleep (min)"),
     ]
     fig, axes = plt.subplots(1, 3, figsize=(15, 4))
@@ -149,9 +148,9 @@ with st.container(border=True):
         ["TotalSteps", "Calories", "VeryActiveMinutes", "SedentaryMinutes"],
         key="day_metric"
     )
-    day_order    = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     weekend_days = {"Saturday", "Sunday"}
-    daily_avg    = plot_df.groupby("DayOfWeek")[metric_choice].mean().reindex(day_order)
+    daily_avg = plot_df.groupby("DayOfWeek")[metric_choice].mean().reindex(day_order)
 
     fig2, ax2 = plt.subplots(figsize=(12, 4))
     fig2.patch.set_facecolor(BG_COLOR)
@@ -166,9 +165,9 @@ with st.container(border=True):
                      bar.get_height() + daily_avg.max() * 0.005,
                      f"{val:,.0f}", ha="center", fontsize=9, color="white")
     ax2.legend(
-        handles=[mpatches.Patch(facecolor=C_BLUE, label="Weekday"),
+        handles = [mpatches.Patch(facecolor=C_BLUE, label="Weekday"),
                  mpatches.Patch(facecolor=C_ORANGE, label="Weekend")],
-        facecolor="#1e2130", labelcolor="white"
+        facecolor = "#1e2130", labelcolor="white"
     )
     plt.tight_layout()
     st.pyplot(fig2)

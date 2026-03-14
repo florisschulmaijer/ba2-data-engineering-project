@@ -272,8 +272,6 @@ plt.ylabel("Average minutes asleep")
 plt.tight_layout()
 plt.show()
 
-
-
 # === Bullet 5: Define a function that takes an ID as inpput and returns a figure that contains heart rate and total intensity of the exercise taken ===
 import pandas as pd
 import matplotlib.pyplot as plt
