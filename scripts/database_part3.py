@@ -272,8 +272,6 @@ plt.ylabel("Average minutes asleep")
 plt.tight_layout()
 plt.show()
 
-
-
 # === Bullet 5: Define a function that takes an ID as inpput and returns a figure that contains heart rate and total intensity of the exercise taken ===
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -344,6 +342,10 @@ def plot_user_HR_exercise_int(user_id, df_1=df_HR, df_2=df_intensity):
     fig.tight_layout()
 
     return fig
+<<<<<<< HEAD:database_part3.py
+=======
+
+>>>>>>> 125e18db94223ad41a8717177918e7d8006dbd75:scripts/database_part3.py
 # === Bullet 6: Investigate the relationship between weather factors and activity of individuals === 
 weather = pd.read_csv("data/ChicagoWeather.csv")
 weather['datetime'] = pd.to_datetime(weather['datetime'], format="%Y-%m-%d")

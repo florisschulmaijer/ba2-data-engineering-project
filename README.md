@@ -1,134 +1,206 @@
-# BA2 Data Engineering Project  
-## Fitbit Activity Analysis
+# FitBit Analytics Dashboard 2016
+
+An interactive data dashboard built with Python and Streamlit that analyses fitness data from 35 Fitbit users collected during a 2016 Amazon survey. The dashboard is aimed at business analysts working for a fitness tracker manufacturer, as well as the study participants themselves.
+
 ---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Repository Structure](#repository-structure)
+3. [Requirements](#requirements)
+4. [How to Run the Dashboard](#how-to-run-the-dashboard)
+5. [Dashboard Pages](#dashboard-pages)
+6. [Data Sources](#data-sources)
+7. [Analysis Scripts](#analysis-scripts)
+8. [Team & Collaboration](#team--collaboration)
+
+---
+
 ## Project Overview
-This project analyses Fitbit activity data using Python and SQL.  
-The focus is on exploring relationships between physical activity, calories burned, and sleep behavior.
+
+This project was built as part of the BA2 Data Engineering course at Vrije Universiteit Amsterdam. It progresses through six parts:
+
+- **Part 1** — Exploratory data analysis on daily activity data
+- **Part 2** — GitHub repository setup and version control
+- **Part 3** — SQLite database interaction and user classification
+- **Part 4** — Data wrangling: merging tables, weight imputation, group-level summaries
+- **Part 5** — Interactive Streamlit dashboard
+- **Part 6** — Deployment via Streamlit Community Cloud
+
+Users are classified into three groups based on how many days they recorded activity:
+
+| Class    | Days recorded |
+|----------|--------------|
+| Light    | ≤ 10 days    |
+| Moderate | 11–15 days   |
+| Heavy    | ≥ 16 days    |
 
 ---
-# Part 1 – Exploratory Data Analysis
-We worked with `daily_activity.csv`.
-### Basic Inspection
-- Counted number of unique users  
-- Computed total distance per user  
-- Visualized total distance in a bar chart  
-### Calories Over Time
-Created a function:
-```python
-plot_calories_burnt(user_id, start_date=None, end_date=None)
+
+## Repository Structure
+
 ```
-This:
-- Filters data for a specific user  
-- Optionally filters by date range  
-- Plots calories burned per day  
-### Workout Frequency
-- Extracted weekday from date  
-- Counted workout frequency per weekday  
-- Visualized results in a bar chart  
-### Linear Regression
-Estimated:
-Calories = β₀ + β₁ · TotalSteps + β₂ · Id + ε  
-Using:
-```python
-smf.ols("Calories ~ TotalSteps + C(Id)", data=df)
+BA2_DataEngineering_Project/
+├── .git/                          ← Git version control (do not modify)
+├── data/
+│   ├── daily_activity.csv         ← Raw daily activity data
+│   └── ChicagoWeather.csv         ← Chicago weather data for the study period
+├── pages/
+│   ├── Weekday vs Weekend Analysis.py       ← Dashboard page
+│   ├── Individual Step Statistics.py        ← Dashboard page
+│   └── Individual Heart Rate & Intensity.py ← Dashboard page
+├── scripts/
+│   ├── fitbit_part1.py            ← Part 1 standalone analysis (EDA, regression)
+│   └── database_part3.py          ← Part 3 standalone analysis (sleep, 4-hour blocks)
+├── .gitignore                     ← Files excluded from version control
+├── datawrangling_part4.py         ← Part 4 analysis + reusable plot functions (imported by dashboard)
+├── fitbit_database.db             ← SQLite database with all study tables
+├── Home.py                        ← Main Streamlit entry point
+└── README.md                      ← This file
 ```
-Additionally:
-- Built a function to visualize scatterplot + regression line per user
-- Built a function to visualize linegraph of total daily steps per user
-- Built  functions to visualize total daily active distance and active minutes per user in stacked bar graphs
+
 ---
 
-# Part 2 – GitHub Setup
-- Created a private GitHub repository  
-- Added Python files and README  
-- Used branches and pull requests for collaboration  
----
+## Requirements
 
-# Part 3 – Database Interaction
-Connected to `fitbit_database.db` using `sqlite3`.
-## User Classification
-Used SQL:
-```sql
-SELECT Id, COUNT(*) as days
-FROM daily_activity
-GROUP BY Id;
+Make sure you have Python 3.9 or later installed. Install all required packages with:
+
+```bash
+pip install streamlit pandas matplotlib seaborn scipy statsmodels
 ```
-Users classified as:
-- Light (≤10 days)
-- Moderate (11–15 days)
-- Heavy (≥16 days)
-Classification applied in Python and stored in a DataFrame.
 
-## Sedentary Minutes vs Sleep Duration
-For this part we check if days with more sitting time are linked to more or less sleep.
-First, we pull the columns we need (Id, ActivityDate, SedentaryMinutes) from the daily_activity table. 
-Then we make sure the date column is in the same "day format" as the sleep data (so the dates line up when we combine the two datasets). After that, we join the sedentary data with our daily sleep table (df_daily_sleep) so each row represents the same user on the same day with both values available.
-Finally, we run a simple linear regression: 
+Or, using a virtual environment:
 
-Duration ~ SedentaryMinutes + C(Id)
+```bash
+python -m venv venv
+source venv/bin/activate        # macOS / Linux
+venv\Scripts\activate           # Windows
+pip install streamlit pandas matplotlib seaborn scipy statsmodels
+```
 
-This gives us an estimate of how sleep duration changes when sedentary minutes change, while C(Id) helps account for the fact that different people naturally sleep different amounts.
-
-What you should see when running the script:
-- A regression summary printed in the console.
-- Two plots to check the regression quality:
-  - A histogram of residuals.
-  - A Q–Q plot of residuals.
-
-## 4-Hour Block Analysis 
-In this part we wanted to see when during the day people are most active and when they sleep. To do that, we split every day into 6 simple time blocks: 0–4, 4–8, 8–12, 12–16, 16–20, 20–24.
-We made a small helper function (hour_to_time_block) that takes an hour and returns which 4-hour block it belongs to. Then we used the same idea for steps, calories, and sleep:
-### Steps
-- Load the hourly_steps table.
-- Convert ActivityHour to datetime.
-- Assign each row to a 4-hour block.
-- Take the average StepTotal per block.
-- Plot a bar chart: _Average steps per 4-hour block._
-### Calories
-- Load the hourly_calories table.
-- Convert ActivityHour to datetime.
-- Assign each row to a 4-hour block.
-- Take the average Calories per block.
-- Plot a bar chart: _Average calories per 4-hour block._
-### Sleep minutes
-- Load the minute_sleep table (this is minute-by-minute sleep data).
-- Convert date to datetime and assign each minute to a 4-hour block.
-- Keep only rows where value == 1 (minutes marked as "asleep").
-- Count asleep minutes per person + day + block, then average those values.
-- Plot a bar chart: _Average minutes asleep per 4-hour block._
-
-What you should see when running the script:
-- 3 bar charts:
-  - Average steps per 4-hour block.
-  - Average calories per 4-hour block.
-  - Average minutes asleep per 4-hour block.
 ---
 
-# Part 4
-In this part we continued investigating the data and defined functions for visualizing individual and group level summaries
-## Bullet 1:
-## Bullet 2: 
-## Bullet 3: defining functions for visualizing individual and group level summaries
-- function plot total distance: function that plots total active distance per day for a given individual
-- function plot daily HR: function that plots a linegraph of the heart rate for an individual, either per day or per date range. Note: when a daterange is given, the average heart rate is computed per hour
-- function plot daily steps: function that plots the daily steps for an individual, either per day or per date range. Note: when a daterange is given, the hourly steps are instead shown per 4 hours.
-- function plot weekday activity per class: function that plots boxplots of various activity measures (to be entered as a variable) for each separate user class per weekday
-## Bullet 4: 
+## How to Run the Dashboard
+
+1. **Clone the repository**
+
+```bash
+git clone <repository-url>
+cd BA2_DataEngineering_Project
+```
+
+2. **Install dependencies** (see [Requirements](#requirements) above)
+
+3. **Start the dashboard**
+
+```bash
+streamlit run Home.py
+```
+
+The dashboard will open automatically in your browser at `http://localhost:8501`.
+
+> **Note:** The `fitbit_database.db` file must be present in the project root. It is included in the repository.
+
 ---
-# Part 5: Dashboard
-This part shows the script for creating the interactive dashboard. 
-In the sidebar, individuals can enter their IDs and dates to check their individual summaries and statistics on a given day.
-The main part of the dashboard is focused on group level summaries and statistics.
 
-Implemented functions:
--load_data functions: used to query and load each used dataframe once. Frames are cached for smoother running 
-of the dashboard
+## Dashboard Pages
 
-Sidebar:
--functions where individuals can enter their IDs and dates to show relevant plots
+### Home — Group Summary
 
-# Technologies Used
-- Python (pandas, matplotlib, statsmodels)
-- SQLite (sqlite3)
-- Git & GitHub
-- streamlit
+The landing page displays group-level statistics across all 35 participants:
+
+- Key metrics: total users, study period, average steps, calories, and sedentary minutes
+- Numerical summary table broken down by user class (Light / Moderate / Heavy)
+- Bar charts comparing average daily steps and calories per user class
+- Interactive boxplot showing the distribution of any chosen activity metric across weekdays, split by user class
+
+### Weekday vs Weekend Analysis
+
+Compares activity and sleep patterns between weekdays (Monday–Friday) and weekends (Saturday–Sunday):
+
+- Summary metric cards showing weekend vs weekday deltas for steps, calories, active minutes, sedentary minutes, and sleep duration
+- Side-by-side bar charts for steps, calories, and sleep
+- Day-of-week bar chart with weekends highlighted in a distinct colour
+- User-class breakdown: how weekday vs weekend differences vary for Light, Moderate, and Heavy users
+- Optional individual user filter in the sidebar
+
+### Individual Step Statistics
+
+Explores the step patterns of a single user:
+
+- Hourly step chart for a selected date or date range
+- Activity summary (total steps, avg steps, avg calories, avg active minutes) for the selected period
+- Group comparison section showing how the selected user's average steps compare to the group
+
+**How to use:**
+1. Select a User ID in the sidebar
+2. Choose a start and end date from the dropdown (only dates with recorded data are shown)
+3. The chart and summary update automatically
+
+### Individual Heart Rate & Intensity
+
+Plots hourly average heart rate and total exercise intensity on a dual-axis chart:
+
+- Heart rate (bpm) on the left y-axis in red
+- Total intensity on the right y-axis in blue
+- Date range filter in the sidebar
+
+Heart-rate data is available for 14 of the 35 users. A start date from 1 April 2016 is recommended as March data may be incomplete.
+
+**How to use:**
+1. Select a User ID from the available list in the sidebar
+2. Set a start and end date
+3. The dual-axis chart updates automatically
+
+---
+
+## Data Sources
+
+The project uses the `fitbit_database.db` SQLite database, which contains the following tables:
+
+| Table              | Description                                                                      |
+|--------------------|----------------------------------------------------------------------------------|
+| `daily_activity`   | Daily totals per user: steps, distance, calories, active and sedentary minutes   |
+| `heart_rate`       | Heart rate sampled every 5 seconds                                               |
+| `hourly_calories`  | Calories burned per hour                                                         |
+| `hourly_intensity` | Exercise intensity (total and average) per hour                                  |
+| `hourly_steps`     | Steps taken per hour                                                             |
+| `minute_sleep`     | Minute-by-minute sleep state (1 = asleep, 2 = restless, 3 = awake)              |
+| `weight_log`       | Weight, fat percentage, and BMI logs                                             |
+
+Additionally, `data/ChicagoWeather.csv` contains weather data (temperature, precipitation, windspeed) for Chicago during the study period, used to investigate weather–activity relationships.
+
+---
+
+## Analysis Scripts
+
+The standalone analysis scripts live in `scripts/` and can be run directly. `datawrangling_part4.py` sits at the root because it is imported by the dashboard pages.
+
+| Script                     | Location   | Contents                                                                                    |
+|----------------------------|------------|---------------------------------------------------------------------------------------------|
+| `fitbit_part1.py`          | `scripts/` | EDA: unique users, total distance per user, calories over time, workout frequency, OLS regression |
+| `database_part3.py`        | `scripts/` | Sleep duration analysis, sedentary vs sleep regression, 4-hour activity block analysis, HR+intensity function |
+| `datawrangling_part4.py`   | root       | Weight imputation, table merging, individual plot functions used by the dashboard, weekday/weekend and weather analysis |
+
+To run the standalone scripts from the project root:
+
+```bash
+python scripts/fitbit_part1.py
+python scripts/database_part3.py
+```
+
+---
+
+## Team & Collaboration
+
+This project was developed by a team of 4 students using GitHub for version control. Each new feature was developed on a separate branch and merged into `main` via pull requests.
+
+**Workflow:**
+1. Create a new branch: `git checkout -b <branch-name>`
+2. Make changes and commit: `git commit -m "descriptive message"`
+3. Push the branch: `git push origin <branch-name>`
+4. Open a pull request on GitHub and request a review
+5. After approval, merge into `main`
+
+All team members contributed to both the analysis scripts and the dashboard code. The commit history reflects individual contributions per team member.
