@@ -411,9 +411,9 @@ df_merged["HR"] =df_merged["Value"]
 df = df_merged[["Id", "sleep_value", "HR", "Time", "logId"]]
 
 #define function that plots heart rate and sleep values for individual users on a given day
-def plot_sleep_HR(user_id, start_date, df=df):
+def plot_sleep_HR(user_id, start_date, df):
 
-    df["Id"] = df["Id"].astype("Int64")
+    df = df.copy()
     df["Time"] = pd.to_datetime(df["Time"])
 
     start_date_string = start_date
@@ -425,13 +425,15 @@ def plot_sleep_HR(user_id, start_date, df=df):
     # Filter for the selected day
     # Expand search window to include sleep before midnight
     sleep_day_start = start_date - pd.Timedelta(hours=6) #define sleep day as 18:00 to 18:00
-    sleep_day_start = start_date - pd.Timedelta(hours=6)
 
-    user_data = df[
-        (df["Time"] >= sleep_day_start) &
-        (df["Time"] < sleep_day_start + pd.Timedelta(days=1))
+
+    user_data = user_data[
+        (user_data["Time"] >= sleep_day_start) &
+        (user_data["Time"] < sleep_day_start + pd.Timedelta(days=1))
         ]
-
+    print("User:", user_id)
+    print("Rows for user:", len(df[df["Id"] == user_id]))
+    print("Rows in time window:", len(user_data))
     if user_data.empty:
         print("No data in selected date range")
         return
@@ -472,13 +474,13 @@ def plot_sleep_HR(user_id, start_date, df=df):
     ax2.plot(
         user_data["Time"],
         user_data["HR"],
-        color="red",
+        color="black",
         linewidth=2,
         label="Heart Rate"
     )
     ax2.set_ylabel("Heart Rate (bpm)")
 
-    # Time formatting: every 10 minutes
+    # Time formatting: every 40 minutes
     ax1.xaxis.set_major_locator(mdates.MinuteLocator(interval=30))
     ax1.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
 
@@ -495,14 +497,359 @@ def plot_sleep_HR(user_id, start_date, df=df):
         Patch(facecolor='orange', label='Sleep Value 3 = Awake')
     ]
 
-    ax1.legend(handles=legend_elements, loc="upper left")
+    ax1.legend(
+        handles=legend_elements,
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1),
+        borderaxespad=0
+    )
 
+    fig.tight_layout(rect=[0, 0, 0.85, 1])
     fig.tight_layout()
 
     return fig
 #%%
-plot_sleep_HR(user_id = 2347167796	, start_date = "2016-03-29", df = df)
+#plot_sleep_HR(user_id = 2347167796	, start_date = "2016-03-29", df = df)
 
+
+###add function to show pie chart of sleep efficiency for given user
+#%%
+def plot_sleep_summary_HR(user_id, start_date, df=df):
+
+    df["Id"] = df["Id"].astype("Int64")
+    df["Time"] = pd.to_datetime(df["Time"])
+
+    start_date_string = start_date
+    start_date = pd.to_datetime(start_date)
+
+    # Filter for user
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Define sleep day window (18:00–18:00)
+    sleep_day_start = start_date - pd.Timedelta(hours=6)
+
+    user_data = user_data[
+        (user_data["Time"] >= sleep_day_start) &
+        (user_data["Time"] < sleep_day_start + pd.Timedelta(days=1))
+    ]
+
+    if user_data.empty:
+        print("No data in selected date range")
+        return
+
+    # Select longest sleep session
+    session_lengths = user_data.groupby("logId")["Time"].count()
+    longest_session = session_lengths.idxmax()
+
+    user_data = user_data[user_data["logId"] == longest_session]
+
+    # Sleep stage labels
+    stage_labels = {
+        1: "Asleep",
+        2: "Restless",
+        3: "Awake"
+    }
+
+    colors = {
+        1: "blue",
+        2: "green",
+        3: "orange"
+    }
+
+    # Count sleep stages
+    stage_counts = user_data["sleep_value"].value_counts().sort_index()
+
+    labels = [stage_labels[s] for s in stage_counts.index]
+    pie_colors = [colors[s] for s in stage_counts.index]
+
+    # ---- Sleep metrics ----
+    asleep_count = stage_counts.get(1, 0)
+    total_count = stage_counts.sum()
+
+    sleep_efficiency = (asleep_count / total_count) * 100 if total_count > 0 else 0
+
+    # get average heart rate
+    avg_hr = int(user_data["HR"].mean())
+    min_hr = user_data["HR"].min()
+    max_hr = user_data["HR"].max()
+
+    # ---- Plot ----
+    fig, ax = plt.subplots(figsize=(7,6))
+
+    ax.pie(
+        stage_counts,
+        labels=labels,
+        colors=pie_colors,
+        autopct="%1.1f%%",
+        startangle=90
+    )
+
+    ax.set_title(f"Sleep Summary for User {user_id} on {start_date_string}")
+
+    # ---- Metrics box ----
+    metrics_text = (
+        f"Average HR: {avg_hr} bpm\n"
+        f"Min HR: {min_hr} bpm\n"
+        f"Max HR: {max_hr} bpm\n"
+        f"Sleep Efficiency: {sleep_efficiency:.1f}%"
+    )
+
+    ax.text(
+        1.2, -0.9,
+        metrics_text,
+        fontsize=11,
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.5")
+    )
+
+    plt.tight_layout()
+
+    return fig
+
+
+#==== plotting function for when heart rate data is not availaible
+#bar chart that shows actual sleep, true sleep minutes and hours slept
+def plot_sleep(user_id, start_date, df):
+
+    df = df.copy()
+    df["date"] = pd.to_datetime(df["date"])
+
+    start_date_string = start_date
+    start_date = pd.to_datetime(start_date)
+
+    # Filter for user
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Define sleep day window (18:00 to 18:00)
+    sleep_day_start = start_date - pd.Timedelta(hours=6)
+
+    user_data = user_data[
+        (user_data["date"] >= sleep_day_start) &
+        (user_data["date"] < sleep_day_start + pd.Timedelta(days=1))
+    ]
+
+
+
+    if user_data.empty:
+        print("No data in selected date range")
+        return
+
+    # Select longest sleep session (exclude naps)
+    session_lengths = user_data.groupby("logId")["date"].count()
+    longest_session = session_lengths.idxmax()
+
+    user_data = user_data[user_data["logId"] == longest_session]
+
+    # Sort chronologically
+    user_data = user_data.sort_values("date")
+
+    fig, ax = plt.subplots(figsize=(14,6))
+
+    # Color mapping for sleep stages
+    colors = {
+        1: "#4C72B0",
+        2: "#55A868",
+        3: "#DD8452"
+    }
+
+    # Plot bars for sleep stages
+    for stage, color in colors.items():
+        stage_data = user_data[user_data["value"] == stage]
+        ax.bar(
+            stage_data["date"],
+            stage_data["value"],
+            width=pd.Timedelta(minutes=1),
+            color=color,
+            label=f"{stage}"
+        )
+
+    ax.set_ylabel("Sleep Value")
+
+    # Time formatting
+    ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=30))
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+
+
+    ax.set_xlabel("Time")
+    ax.set_title(f"Sleep Stages for User {user_id} around {start_date_string}")
+    plt.xticks(rotation=45)
+    # Custom legend
+    from matplotlib.patches import Patch
+
+    legend_elements = [
+        Patch(facecolor=colors[1], label='Sleep Value 1 = Asleep'),
+        Patch(facecolor=colors[2], label='Sleep Value 2 = Restless'),
+        Patch(facecolor=colors[3], label='Sleep Value 3 = Awake')
+    ]
+
+    ax.legend(
+        handles=legend_elements,
+        loc="upper left",
+        bbox_to_anchor=(1.02, 1),
+        borderaxespad=0
+    )
+
+    fig.tight_layout(rect=[0, 0, 0.85, 1])
+
+    return fig
+
+def plot_sleep_summary(user_id, start_date, df=df):
+
+    df["Id"] = df["Id"].astype("Int64")
+    df["date"] = pd.to_datetime(df["date"])
+
+    start_date_string = start_date
+    start_date = pd.to_datetime(start_date)
+
+    # Filter for user
+    user_data = df[df["Id"] == user_id].copy()
+
+    # Define sleep day window (18:00–18:00)
+    sleep_day_start = start_date - pd.Timedelta(hours=6)
+
+    user_data = user_data[
+        (user_data["date"] >= sleep_day_start) &
+        (user_data["date"] < sleep_day_start + pd.Timedelta(days=1))
+    ]
+
+    if user_data.empty:
+        print("No data in selected date range")
+        return
+
+    # Select longest sleep session
+    session_lengths = user_data.groupby("logId")["date"].count()
+    longest_session = session_lengths.idxmax()
+
+    user_data = user_data[user_data["logId"] == longest_session]
+
+    # Sleep stage labels
+    stage_labels = {
+        1: "Asleep",
+        2: "Restless",
+        3: "Awake"
+    }
+
+    colors = {
+        1: "#4C72B0",
+        2: "#55A868",
+        3: "#DD8452"
+    }
+
+    # Count stages
+    stage_counts = user_data["value"].value_counts().sort_index()
+
+    # Convert to minutes (assuming 5-minute epochs)
+    stage_minutes = stage_counts * 1
+
+    # Sleep metrics
+    asleep_minutes = stage_minutes.get(1, 0)
+    total_minutes = stage_minutes.sum()
+    total_hours = total_minutes/60
+
+    sleep_efficiency = (asleep_minutes / total_minutes) * 100 if total_minutes > 0 else 0
+
+    # ---- Plot ----
+    fig, ax = plt.subplots(figsize=(9,3))
+
+    left = 0
+    for stage in stage_minutes.index:
+        minutes = stage_minutes[stage]
+
+        ax.barh(
+            y=0,
+            width=minutes,
+            left=left,
+            color=colors[stage],
+            label=f"{stage_labels[stage]} ({minutes} min)"
+        )
+
+        left += minutes
+
+    ax.set_xlim(0, total_minutes)
+    ax.set_yticks([])
+    ax.set_xlabel("Minutes")
+    ax.set_title(f"Sleep Summary for User {user_id} on {start_date_string}")
+
+    # Legend
+    ax.legend(
+        title="Sleep Stages",
+        bbox_to_anchor=(1.02, 1),
+        loc="upper left"
+    )
+
+    # Metrics box
+    metrics_text = (
+        f"Total Sleep Window: {total_minutes} min\n"
+        f"Asleep: {asleep_minutes} min\n"
+        f"Sleep Efficiency: {sleep_efficiency:.1f}%\n"
+        f"Total Sleep in Hours: {total_hours:.1f} hours\n"
+    )
+
+    ax.text(
+        1.02, -0.4,
+        metrics_text,
+        transform=ax.transAxes,
+        fontsize=10,
+        bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.5")
+    )
+
+    plt.tight_layout()
+
+    return fig
+#function that shows bar charts of total average sleep per weekday for individual users
+def plot_sleep_overview(user_id, df):
+    # Filter for user
+    user_data = df[df["Id"] == user_id].copy()
+    #calculate sleep durations for each log id
+    df_user_sleep = (user_data.groupby(["logId"]).
+                     agg(
+        start_date=("date", "min"),  # Date sleep period started
+        end_date=("date", "max"),  # Date sleep period ended
+        Duration=("logId", "count")  # Duration: sleep duration in mins
+    ).reset_index())
+    df_user_sleep["Duration"] = df_user_sleep["Duration"]/60
+    df_user_sleep= df_user_sleep.round({"Duration": 2}) #round hours to two decimals for plotting
+    #Add columns with days of the week and whether there are naps or not
+    df_user_sleep["DayOfWeek"] = df_user_sleep["start_date"].dt.day_name()
+    df_user_sleep["DayOfWeek"] = df_user_sleep["DayOfWeek"].astype("category")
+    #classify nap as <4 hours sleep
+    df_user_sleep["Sleep Type"] = df_user_sleep["Duration"].apply(lambda x: "Nap" if (x < 4) else "Full Night").astype(
+        "category")
+    total_naps = len(df_user_sleep[df_user_sleep['Sleep Type']=='Nap'])
+    average_sleep_hours = df_user_sleep[df_user_sleep['Sleep Type']=='Full Night']["Duration"].mean()
+
+    #plotting
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax = sns.barplot(df_user_sleep, x = "DayOfWeek", y = "Duration", hue = "Sleep Type",
+                order= ["Monday", "Tuesday", "Wednesday", "Thursday",
+                              "Friday", "Saturday", "Sunday"],
+                     estimator="mean", errorbar=None)
+    for container in ax.containers:
+        labels = [f"{v:.2f}" for v in container.datavalues]
+        ax.bar_label(container, labels=labels, fontsize=10)
+
+        # Metrics box
+        metrics_text = (
+            f"Full night sleep average:{average_sleep_hours:.1f}\n"
+            f"Total number of naps:{total_naps}\n"
+            "Naps are defined as sleep periods\n"
+            "lasting less than 4 hours"
+        )
+
+        ax.text(
+            1.02, -0.4,
+            metrics_text,
+            transform=ax.transAxes,
+            fontsize=10,
+            bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.5")
+        )
+
+        plt.tight_layout()
+
+    ax.set_xlabel("Day of the week")
+    ax.set_ylabel("Average Daily Sleep Duration in Hours")
+    ax.set_title(f'Hours slept on average per weekday for {user_id}')
+    ax.legend(title="Sleep Type")
+    return fig
 
 
 
