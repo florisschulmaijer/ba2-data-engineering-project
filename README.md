@@ -153,6 +153,17 @@ Heart-rate data is available for 14 of the 35 users. A start date from 1 April 2
 2. Set a start and end date
 3. The dual-axis chart updates automatically
 
+### Weather Analysis
+
+Plots association between a weather variable and a activity variable recorded through out the measurements. In total, there are more than 30 tracking days, corresponding more than 30 data points in this plot:
+
+- Activity variable on the x-axis
+- Weather variable on the y-axis: Feels Like, Temperature, Windspeed, Humidity, Precipitation
+
+**How to use:**
+1. Select a Weather variable
+2. Select a Activity variable
+3. The plot pops up alongside a Pearson's r test
 ---
 
 ## Data Sources
