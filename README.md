@@ -76,18 +76,6 @@ BA2_DataEngineering_Project/
 └── README.md                       ← This file
 ```
 
-### Data flow
-
-```
-data/*.csv
-    └─► scripts/fitbit_part1.py         (Part 1 — EDA on raw data)
-    └─► scripts/database_part3.py       (Part 3 — loads CSVs into SQLite)
-            └─► fitbit_database.db
-                    └─► datawrangling_part4.py   (Part 4 — wrangling & plot functions)
-                            └─► Home.py + pages/ (Part 5 — Streamlit dashboard)
-                    └─► scripts/sleep_regression.py  (standalone regression analysis)
-```
-
 ---
 
 ## Requirements
