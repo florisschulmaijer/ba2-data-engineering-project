@@ -7,6 +7,24 @@ import seaborn as sns
 import numpy as np
 from scipy.stats import pearsonr
 
+# Dashboard theme
+BG_COLOR = "#111420"
+C_BLUE = "#4C9BE8"
+C_ORANGE = "#E8834C"
+C_GREEN = "#52C97A"
+C_RED = "#D62728"
+C_GRAY = "#9B9EAC"
+C_PURPLE = "#A78BFA"
+
+def _style_ax(ax):
+    ax.set_facecolor(BG_COLOR)
+    ax.tick_params(colors="white")
+    ax.xaxis.label.set_color("white")
+    ax.yaxis.label.set_color("white")
+    ax.title.set_color("white")
+    for spine in ax.spines.values():
+        spine.set_edgecolor("#444")
+
 # Connect to database
 conn = sqlite3.connect("fitbit_database.db")
 
@@ -295,9 +313,11 @@ def plot_daily_steps(user_id, start_date, end_date=None, df=df):
         st_agg = user_data["StepTotal"].resample("h").mean()
 
         fig, ax = plt.subplots(figsize=(12, 6))
+        fig.patch.set_facecolor(BG_COLOR)
+        _style_ax(ax)
 
-        ax.bar(st_agg.index, st_agg.values, width=0.03,
-               color='skyblue', edgecolor='black')
+        ax.bar(st_agg.index, st_agg.values, width=pd.Timedelta(minutes=55),
+               color=C_BLUE, edgecolor=BG_COLOR)
 
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))
         ax.xaxis.set_major_locator(mdates.HourLocator())
@@ -322,7 +342,8 @@ def plot_daily_steps(user_id, start_date, end_date=None, df=df):
                 textcoords='offset points',
                 ha='center',
                 va=va,
-                arrowprops=dict(arrowstyle="->", color='red')
+                color="white",
+                arrowprops=dict(arrowstyle="->", color=C_ORANGE)
             )
 
     else:
@@ -340,9 +361,11 @@ def plot_daily_steps(user_id, start_date, end_date=None, df=df):
         st_agg = user_data["StepTotal"].resample("4h").sum()
 
         fig, ax = plt.subplots(figsize=(12, 6))
+        fig.patch.set_facecolor(BG_COLOR)
+        _style_ax(ax)
 
-        ax.bar(st_agg.index, st_agg.values, width=0.03,
-               color='skyblue', edgecolor='black')
+        ax.bar(st_agg.index, st_agg.values, width=pd.Timedelta(hours=3.5),
+               color=C_BLUE, edgecolor=BG_COLOR)
 
         ax.set_xlabel("Date")
         ax.set_ylabel("Steps per 4 Hours")
@@ -640,12 +663,14 @@ def plot_sleep(user_id, start_date, df):
     user_data = user_data.sort_values("date")
 
     fig, ax = plt.subplots(figsize=(14,6))
+    fig.patch.set_facecolor(BG_COLOR)
+    _style_ax(ax)
 
     # Color mapping for sleep stages
     colors = {
-        1: "#4C72B0",
-        2: "#55A868",
-        3: "#DD8452"
+        1: C_BLUE,
+        2: C_ORANGE,
+        3: C_RED
     }
 
     # Plot bars for sleep stages
@@ -665,7 +690,6 @@ def plot_sleep(user_id, start_date, df):
     ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=30))
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
 
-
     ax.set_xlabel("Time")
     ax.set_title(f"Sleep Stages for User {user_id} around {start_date_string}")
     plt.xticks(rotation=45)
@@ -682,7 +706,9 @@ def plot_sleep(user_id, start_date, df):
         handles=legend_elements,
         loc="upper left",
         bbox_to_anchor=(1.02, 1),
-        borderaxespad=0
+        borderaxespad=0,
+        facecolor="#1e2130",
+        labelcolor="white"
     )
 
     fig.tight_layout(rect=[0, 0, 0.85, 1])
@@ -726,9 +752,9 @@ def plot_sleep_summary(user_id, start_date, df=df):
     }
 
     colors = {
-        1: "#4C72B0",
-        2: "#55A868",
-        3: "#DD8452"
+        1: C_BLUE,
+        2: C_ORANGE,
+        3: C_RED
     }
 
     # Count stages
@@ -746,6 +772,8 @@ def plot_sleep_summary(user_id, start_date, df=df):
 
     # ---- Plot ----
     fig, ax = plt.subplots(figsize=(9,3))
+    fig.patch.set_facecolor(BG_COLOR)
+    _style_ax(ax)
 
     left = 0
     for stage in stage_minutes.index:
@@ -770,7 +798,10 @@ def plot_sleep_summary(user_id, start_date, df=df):
     ax.legend(
         title="Sleep Stages",
         bbox_to_anchor=(1.02, 1),
-        loc="upper left"
+        loc="upper left",
+        facecolor="#1e2130",
+        labelcolor="white",
+        title_fontsize=9
     )
 
     # Metrics box
@@ -786,7 +817,8 @@ def plot_sleep_summary(user_id, start_date, df=df):
         metrics_text,
         transform=ax.transAxes,
         fontsize=10,
-        bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.5")
+        color="white",
+        bbox=dict(facecolor="#191d2e", edgecolor="#444", boxstyle="round,pad=0.5")
     )
 
     plt.tight_layout()
@@ -816,36 +848,40 @@ def plot_sleep_overview(user_id, df):
 
     #plotting
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax = sns.barplot(df_user_sleep, x = "DayOfWeek", y = "Duration", hue = "Sleep Type",
-                order= ["Monday", "Tuesday", "Wednesday", "Thursday",
-                              "Friday", "Saturday", "Sunday"],
-                     estimator="mean", errorbar=None)
+    fig.patch.set_facecolor(BG_COLOR)
+    ax = sns.barplot(df_user_sleep, x="DayOfWeek", y="Duration", hue="Sleep Type",
+                order=["Monday", "Tuesday", "Wednesday", "Thursday",
+                       "Friday", "Saturday", "Sunday"],
+                palette={"Full Night": C_BLUE, "Nap": C_ORANGE},
+                estimator="mean", errorbar=None)
+    _style_ax(ax)
     for container in ax.containers:
         labels = [f"{v:.2f}" for v in container.datavalues]
-        ax.bar_label(container, labels=labels, fontsize=10)
+        ax.bar_label(container, labels=labels, fontsize=10, color="white")
 
-        # Metrics box
-        metrics_text = (
-            f"Full night sleep average:{average_sleep_hours:.1f}\n"
-            f"Total number of naps:{total_naps}\n"
-            "Naps are defined as sleep periods\n"
-            "lasting less than 4 hours"
-        )
+    # Metrics box
+    metrics_text = (
+        f"Full night sleep average:{average_sleep_hours:.1f}\n"
+        f"Total number of naps:{total_naps}\n"
+        "Naps are defined as sleep periods\n"
+        "lasting less than 4 hours"
+    )
 
-        ax.text(
-            1.02, -0.4,
-            metrics_text,
-            transform=ax.transAxes,
-            fontsize=10,
-            bbox=dict(facecolor="white", edgecolor="black", boxstyle="round,pad=0.5")
-        )
+    ax.text(
+        1.02, -0.4,
+        metrics_text,
+        transform=ax.transAxes,
+        fontsize=10,
+        color="white",
+        bbox=dict(facecolor="#191d2e", edgecolor="#444", boxstyle="round,pad=0.5")
+    )
 
-        plt.tight_layout()
+    plt.tight_layout()
 
     ax.set_xlabel("Day of the week")
     ax.set_ylabel("Average Daily Sleep Duration in Hours")
     ax.set_title(f'Hours slept on average per weekday for {user_id}')
-    ax.legend(title="Sleep Type")
+    ax.legend(title="Sleep Type", facecolor="#1e2130", labelcolor="white")
     return fig
 
 
@@ -882,16 +918,20 @@ def plot_weekday_activity_per_class(df,
     df["DayOfWeek"] = df["DayOfWeek"].astype("category")
 
     fig, ax = plt.subplots(figsize=(12, 6))
+    fig.patch.set_facecolor(BG_COLOR)
 
     # Create the boxplot on the axis
     sns.boxplot(data=df, x="DayOfWeek", y=variable, hue="Class",
                 order=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                hue_order=["Light", "Moderate", "Heavy"], ax=ax)
+                hue_order=["Light", "Moderate", "Heavy"],
+                palette={"Light": C_BLUE, "Moderate": C_ORANGE, "Heavy": C_GREEN},
+                ax=ax)
+    _style_ax(ax)
 
     ax.set_xlabel("Day of the week")
     ax.set_ylabel(variable)
     ax.set_title(f'Distribution of {variable} per weekday and user class')
-    ax.legend(title="User Class")
+    ax.legend(title="User Class", facecolor="#1e2130", labelcolor="white")
     # --- SUMMARY STATISTICS ---
     var_series = df[variable].dropna()
 

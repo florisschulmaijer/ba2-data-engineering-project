@@ -8,7 +8,7 @@ import seaborn as sns
 
 # === Page config ===
 st.set_page_config(
-    page_title="FitBit Analytics 2016",
+    page_title="Weather Analysis",
     page_icon="fitbit",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -122,10 +122,18 @@ def plot_weather_act( x, y,df=merged_df_weather, color=C_BLUE):
     return fig
 
 # === Sidebar ===
-st.sidebar.title("FitBit Analytics 2016")
-st.sidebar.markdown("Select a weather variable and an activity variable to see if they form a meaningful relationship")
-
-st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Weather Analysis</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            How weather conditions relate to group activity levels.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+st.sidebar.divider()
 st.sidebar.markdown("**Select a Weather variable**")
 chosen_weather_var = st.sidebar.selectbox("Select a User ID", weather_vars)
 

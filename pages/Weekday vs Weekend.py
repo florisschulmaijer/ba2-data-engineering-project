@@ -7,15 +7,18 @@ import sqlite3
 
 # === Page config ===
 st.set_page_config(
-    page_title="Weekday vs Weekend | FitBit Analytics",
+    page_title="Weekday vs Weekend",
     page_icon="fitbit",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 BG_COLOR = "#111420"
-C_BLUE = "#4C9BE8"   # weekday
-C_ORANGE = "#E8834C"   # weekend
+C_BLUE = "#4C9BE8"
+C_ORANGE = "#E8834C"
+C_GREEN = "#52C97A"
+C_GRAY = "#9B9EAC"
+C_PURPLE = "#A78BFA"
 
 def style_ax(ax):
     ax.set_facecolor(BG_COLOR)
@@ -27,9 +30,17 @@ def style_ax(ax):
         spine.set_edgecolor("#444")
 
 # Sidebar
-st.sidebar.title("FitBit Analytics 2016")
-st.sidebar.markdown("**Weekday vs Weekend**")
-st.sidebar.caption("Compare activity and sleep across weekdays (Mon–Fri) and weekends (Sat–Sun).")
+st.sidebar.markdown(
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Weekday vs Weekend</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            Activity and sleep patterns compared across weekdays and weekends.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.sidebar.divider()
 
 # === Data loading ===
@@ -101,9 +112,9 @@ with st.container(border=True):
     metrics_config = {
         "TotalSteps": ("Avg Steps", C_BLUE),
         "Calories": ("Avg Calories", C_ORANGE),
-        "VeryActiveMinutes": ("Very Active Min","#52C97A"),
-        "SedentaryMinutes": ("Sedentary Min", "#9B9EAC"),
-        "asleep_min": ("Sleep (min)", "#A78BFA"),
+        "VeryActiveMinutes": ("Very Active Min", C_GREEN),
+        "SedentaryMinutes": ("Sedentary Min", C_GRAY),
+        "asleep_min": ("Sleep (min)", C_PURPLE),
     }
     cols = st.columns(5)
     for col, (metric, (lbl, color)) in zip(cols, metrics_config.items()):
