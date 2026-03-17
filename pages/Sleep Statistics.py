@@ -27,10 +27,18 @@ df_sleep = load_sleep_data()
 
 
 # === Sidebar ===
-st.sidebar.title("Individual Users")
-st.sidebar.markdown("Select a user ID to view individual sleep insights.")
-
-st.sidebar.markdown("---")
+st.sidebar.markdown(
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Sleep Statistics</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            Per-user sleep stages and duration. Select a date to explore nightly patterns.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+st.sidebar.divider()
 st.sidebar.markdown("**Select a User**")
 available_ids = sorted(df_sleep["Id"].dropna().unique().tolist())
 user_id = st.sidebar.selectbox("Select a User ID", available_ids)
@@ -64,6 +72,11 @@ start_date = st.sidebar.selectbox(
 )
 
 st.sidebar.write(f"Selected: {start_date.strftime('%d/%m/%Y')}")
+
+# Page header
+st.title("Sleep Statistics")
+st.caption(f"User {user_id} · {start_date.strftime('%d/%m/%Y')}")
+st.divider()
 
 #generate figures
 fig_sleep = plot_sleep(user_id, start_date, df_sleep)

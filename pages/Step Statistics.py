@@ -7,7 +7,7 @@ from datawrangling_part4 import plot_daily_steps
 
 # === Page config ===
 st.set_page_config(
-    page_title="Individual Steps | FitBit Analytics",
+    page_title="Step Statistics",
     page_icon="fitbit",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -54,9 +54,17 @@ df_overview["Class"] = df_overview.groupby("Id")["Id"].transform("count").apply(
 )
 
 # Sidebar
-st.sidebar.title("FitBit Analytics 2016")
-st.sidebar.markdown("**Step Statistics**")
-st.sidebar.caption("Per-user step data with date filter.")
+st.sidebar.markdown(
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Step Statistics</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            Per-user hourly step patterns across a selected date range.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.sidebar.divider()
 
 available_ids = sorted(df_overview["Id"].dropna().unique().tolist())
