@@ -7,7 +7,7 @@ import sqlite3
 
 # === Page config ===
 st.set_page_config(
-    page_title="Heart Rate & Intensity | FitBit Analytics",
+    page_title="Heart Rate & Intensity",
     page_icon="fitbit",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -27,9 +27,17 @@ def style_ax(ax):
         spine.set_edgecolor("#444")
 
 # Sidebar
-st.sidebar.title("FitBit Analytics 2016")
-st.sidebar.markdown("**Heart Rate & Intensity**")
-st.sidebar.caption("Available for 14 of 35 users. Start from 1 April recommended — March data may be incomplete.")
+st.sidebar.markdown(
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Heart Rate & Intensity</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            Per-user heart rate and exercise intensity over time. Available for 14 of 35 users.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 st.sidebar.divider()
 
 # === Data loading ===
@@ -142,7 +150,11 @@ end_date   = st.sidebar.date_input("End date",   min_value=min_dt, max_value=max
 
 # Page header
 st.title("Heart Rate & Intensity")
-st.caption(f"User {user_id}·{start_date.strftime('%d/%m/%Y')} to {end_date.strftime('%d/%m/%Y')}  ·  HR (red) vs intensity (blue)")
+st.caption(
+    f"**Visual Analysis:** Tracking User {user_id} from {start_date} to {end_date}. "
+    "The blue spikes represent exercise or high-movement events, while the red line tracks "
+    "how the cardiovascular system responded to those intensity changes."
+)
 st.divider()
 
 # Chart

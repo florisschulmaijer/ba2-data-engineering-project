@@ -47,16 +47,18 @@ def kpi_card(label, value, color=C_BLUE):
     )
 
 # Sidebar
-st.sidebar.title("FitBit Analytics 2016")
-st.sidebar.markdown("**Home**")
-st.sidebar.caption("Group-level overview of all 35 participants.")
-st.sidebar.divider()
 st.sidebar.markdown(
-    "- **Home** — overview\n"
-    "- **Weekday vs Weekend** — activity patterns\n"
-    "- **Individual Step Statistics** — per-user steps\n"
-    "- **Individual Heart Rate & Intensity** — HR over time"
+    """
+    <div style="padding: 12px 4px 8px 4px;">
+        <div style="color:white; font-size:1.1rem; font-weight:700; margin-bottom:4px;">Home</div>
+        <div style="color:#9B9EAC; font-size:0.78rem; line-height:1.5;">
+            Group-level summary of all 35 participants across the 2016 study period.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
+st.sidebar.divider()
 
 # === Data loading ===
 @st.cache_data
