@@ -94,62 +94,6 @@ pip install streamlit pandas numpy matplotlib seaborn scipy statsmodels
 
 Python 3.9 or later is required.
 
-<<<<<<< HEAD
-This gives us an estimate of how sleep duration changes when sedentary minutes change, while C(Id) helps account for the fact that different people naturally sleep different amounts.
-
-What you should see when running the script:
-- A regression summary printed in the console.
-- Two plots to check the regression quality:
-  - A histogram of residuals.
-  - A Q–Q plot of residuals.
-
-## 4-Hour Block Analysis 
-In this part we wanted to see when during the day people are most active and when they sleep. To do that, we split every day into 6 simple time blocks: 0–4, 4–8, 8–12, 12–16, 16–20, 20–24.
-We made a small helper function (hour_to_time_block) that takes an hour and returns which 4-hour block it belongs to. Then we used the same idea for steps, calories, and sleep:
-### Steps
-- Load the hourly_steps table.
-- Convert ActivityHour to datetime.
-- Assign each row to a 4-hour block.
-- Take the average StepTotal per block.
-- Plot a bar chart: _Average steps per 4-hour block._
-### Calories
-- Load the hourly_calories table.
-- Convert ActivityHour to datetime.
-- Assign each row to a 4-hour block.
-- Take the average Calories per block.
-- Plot a bar chart: _Average calories per 4-hour block._
-### Sleep minutes
-- Load the minute_sleep table (this is minute-by-minute sleep data).
-- Convert date to datetime and assign each minute to a 4-hour block.
-- Keep only rows where value == 1 (minutes marked as "asleep").
-- Count asleep minutes per person + day + block, then average those values.
-- Plot a bar chart: _Average minutes asleep per 4-hour block._
-
-What you should see when running the script:
-- 3 bar charts:
-  - Average steps per 4-hour block.
-  - Average calories per 4-hour block.
-  - Average minutes asleep per 4-hour block.
-
-### How heart rate relates to exercise intensity for a given user
-- Loaded data and hourly intensity data from databases
-- Cleaned, and aligned by User ID and Hour
-- Heart Rate is aggregated to hourly average and merged with total intensity
-
-- The function plot_user_HR_exercise_int(id) produces a dual-axis plot showing how a user's average heart rate varies alongside their exercise intensity over time
-- Key output: Hourly heart-rate vs. intensity visualization for any user ID
-
-### Weather and Activity Correlations
-- Daily activities metrics are merged with Chicago weather data 
-- Activity is aggregated by date and by activity class
-- Pearson correlations are computed between these two variab;es
-- Only statistically significant pairs are visualized
-- A class-wise LOWESS analysis indicates how different activity groups respond to weather conditions.
-
-- Key output: Correlation table, multi-panel regression plots
-=======
->>>>>>> 125e18db94223ad41a8717177918e7d8006dbd75
----
 
 ## How to Run the Dashboard
 
