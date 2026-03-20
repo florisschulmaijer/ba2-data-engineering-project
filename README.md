@@ -94,6 +94,7 @@ pip install streamlit pandas numpy matplotlib seaborn scipy statsmodels
 
 Python 3.9 or later is required.
 
+---
 
 ## How to Run the Dashboard
 
