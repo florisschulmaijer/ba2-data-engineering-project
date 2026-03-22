@@ -170,6 +170,15 @@ Comparison of activity and sleep between weekdays and weekends:
 - Optional individual user filter in the sidebar
 
 ---
+### Sleep Analysis
+
+Shows the relationship between sleep duration and activity variables:
+
+- Scatterplots of sleep duration vs total active minutes and sedentary minutes  
+- Linear regression lines to show trends  
+- QQ-plot to check normality of residuals  
+
+This page helps understand how activity levels are related to sleep patterns.
 
 ## Data Sources
 
