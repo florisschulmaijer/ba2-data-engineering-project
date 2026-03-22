@@ -165,6 +165,15 @@ Plots association between a weather variable and a activity variable recorded th
 2. Select a Activity variable
 3. The plot pops up alongside a Pearson's r test
 ---
+### Sleep Analysis
+
+Shows the relationship between sleep duration and activity variables:
+
+- Scatterplots of sleep duration vs total active minutes and sedentary minutes  
+- Linear regression lines to show trends  
+- QQ-plot to check normality of residuals  
+
+This page helps understand how activity levels are related to sleep patterns.
 
 ## Data Sources
 
