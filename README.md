@@ -66,6 +66,7 @@ BA2_DataEngineering_Project/
 ├── pages/
 │   ├── Heart Rate & Intensity.py   ← Per-user HR vs intensity dual-axis chart
 │   ├── Sleep Statistics.py         ← Per-user sleep stages and nightly duration
+|   ├── Sleep Analysis.py          
 │   ├── Step Statistics.py          ← Per-user hourly step patterns
 │   ├── Weather Analysis.py         ← Weather vs activity correlation explorer
 │   └── Weekday vs Weekend.py       ← Weekday vs weekend activity & sleep comparison
